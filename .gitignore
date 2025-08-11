@@ -1,0 +1,253 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.ENV/
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.staging
+.env.test
+*.env
+
+# Logs
+logs/
+*.log
+log/
+app.log
+gunicorn.log
+celery.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database.db
+mlflow.db
+
+# Machine Learning Models and Data
+data/models/
+data/audio/
+data/transcripts/
+*.pt
+*.pth
+*.bin
+*.ckpt
+*.h5
+*.pkl
+*.pickle
+model_artifacts/
+checkpoints/
+runs/
+wandb/
+mlruns/
+.mlflow/
+
+# Training Data (keep structure but not actual data)
+data/training_datasets/*.json
+data/raw_conversations/*.json
+data/processed/*.json
+data/validation/*.json
+!data/training_datasets/.gitkeep
+!data/raw_conversations/.gitkeep
+!data/processed/.gitkeep
+!data/validation/.gitkeep
+
+# Audio Files
+*.wav
+*.mp3
+*.flac
+*.aac
+*.ogg
+*.m4a
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Flask
+instance/
+.webassets-cache
+.coverage
+htmlcov/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Docker
+.docker/
+docker-compose.override.yml
+.dockerignore
+
+# Kafka and Event Streaming
+kafka-logs/
+zookeeper/
+
+# Redis
+dump.rdb
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.temp
+.cache/
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Security and Secrets
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+api_keys.txt
+tokens.txt
+
+# HuggingFace Cache
+.cache/
+transformers_cache/
+huggingface_hub/
+
+# PyTorch Lightning
+lightning_logs/
+
+# Weights & Biases
+wandb/
+
+# MLflow
+mlruns/
+.mlflow/
+
+# DVC (Data Version Control)
+.dvc/
+.dvcignore
+
+# Azure/Cloud Credentials
+.azure/
+*.publishsettings
+
+# Large Files (should use Git LFS)
+*.tar.gz
+*.zip
+*.rar
+*.7z
+*.dmg
+*.iso
+
+# Node.js (if any frontend build tools are used)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backup Files
+*.bak
+*.backup
+*.old
+
+# Local Configuration Overrides
+config_local.py
+local_settings.py
+
+# Documentation Build
+docs/_build/
+site/
+
+# Profiling
+*.prof
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# Exclude evaluation results (can be regenerated)
+evaluation_results.json
+model_comparison.json
+
+# Local development database dumps
+*.sql
+pg_dump_*
+
+# Custom exclusions for this project
+deployment_keys/
+production_config/
+staging_config/
