@@ -25,7 +25,7 @@
 .transcript-display {
   width: 100%;
   max-width: 800px;
-  background-color: var(--secondary-bg);
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   display: flex;
@@ -62,7 +62,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .message {
@@ -71,21 +71,23 @@
   gap: 4px;
 }
 
+.message .role {
+  font-weight: 600;
+  font-size: 14px;
+}
+
 .message.call_taker .role {
   color: var(--accent-blue);
-  font-weight: 600;
 }
 
 .message.caller .role {
-  color: var(--accent-green);
-  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .message .content {
-  background-color: var(--primary-bg);
-  padding: 12px 16px;
-  border-radius: 8px;
+  color: var(--text-primary);
   line-height: 1.5;
+  font-size: 14px;
 }
 
 .call-controls-bottom {
@@ -100,4 +102,10 @@
   border: none;
   cursor: pointer;
   padding: 0;
+}
+
+.hang-up-button .call-icon {
+  width: 80px;
+  height: 80px;
+  font-size: 32px;
 }

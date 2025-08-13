@@ -1,13 +1,12 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import HomePage from './screens/HomePage';
-import ScenarioSelector from './screens/ScenarioSelector';
-import CallWaiting from './screens/CallWaiting';
-import CallInterface from './screens/CallInterface';
 import { SessionProvider } from './context/SessionContext';
 import { WebSocketProvider } from './context/WebSocketContext';
-import './App.css';
+import Layout from './components/Layout';
+import HomePage from './components/HomePage';
+import ScenarioSelector from './components/ScenarioSelector';
+import CallWaiting from './components/CallWaiting';
+import CallInterface from './components/CallInterface';
 
 function App() {
   return (

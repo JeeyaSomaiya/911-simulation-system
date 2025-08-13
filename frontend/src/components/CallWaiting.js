@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import CallIcon from '../components/features/ui/CallIcon';
-import { useSession } from '../hooks/useSession';
+import { useSession } from '../services/useSession';
+import './styles/call-waiting.css';
 
 const CallWaiting = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { session, terminateSession } = useSession();
+  const { terminateSession } = useSession();
 
   useEffect(() => {
     // Simulate call pickup after 3 seconds
@@ -38,7 +38,9 @@ const CallWaiting = () => {
       </div>
 
       <div className="call-icon-container">
-        <CallIcon isActive={true} />
+        <div className="call-icon green active">
+          <span className="phone-symbol">📞</span>
+        </div>
       </div>
     </div>
   );

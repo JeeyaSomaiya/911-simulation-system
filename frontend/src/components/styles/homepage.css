@@ -1,6 +1,7 @@
 .homepage {
   max-width: 800px;
   margin: 0 auto;
+  padding-top: 40px;
 }
 
 .stats-container {
@@ -11,7 +12,7 @@
 }
 
 .stats-card {
-  background-color: var(--secondary-bg);
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 32px;
@@ -32,22 +33,41 @@
   margin-bottom: 4px;
 }
 
-.stats-subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
 .cta-section {
   text-align: center;
   margin-bottom: 48px;
 }
 
-.call-button {
-  width: 100%;
-  max-width: 400px;
-  height: 56px;
-  font-size: 18px;
+.simulate-call-btn {
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.simulate-call-btn:hover {
+  background-color: #3367d6;
+  transform: translateY(-1px);
+}
+
+.simulate-call-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.phone-icon {
+  font-size: 18px;
 }
 
 .sections-container {

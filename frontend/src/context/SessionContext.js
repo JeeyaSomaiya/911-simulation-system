@@ -4,7 +4,6 @@ const SessionContext = createContext();
 
 const initialState = {
   currentSession: null,
-  sessionHistory: [],
   isLoading: false,
   error: null
 };

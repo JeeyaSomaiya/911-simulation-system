@@ -30,7 +30,6 @@
   justify-content: center;
   align-items: center;
   font-size: 48px;
-  animation: pulse 2s infinite;
 }
 
 .call-icon.green {
@@ -43,16 +42,12 @@
   color: white;
 }
 
-.call-icon.large {
-  width: 120px;
-  height: 120px;
-  font-size: 48px;
+.call-icon.active {
+  animation: pulse 2s infinite;
 }
 
-.call-icon.medium {
-  width: 80px;
-  height: 80px;
-  font-size: 32px;
+.phone-symbol {
+  transform: rotate(0deg);
 }
 
 @keyframes pulse {
