@@ -28,7 +28,6 @@ const ScenarioSelector = () => {
         // Validate that data is an array
         if (Array.isArray(data) && data.length > 0) {
           setScenarios(data);
-          setSelectedScenario(data[0]);
         } else {
           throw new Error('No scenarios found in JSON file');
         }
@@ -107,36 +106,43 @@ const ScenarioSelector = () => {
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               <span>
-                {selectedScenario ? `${selectedScenario.Code} ${selectedScenario.EventType}` : 'Select scenario'}
+                {selectedScenario 
+                  ? `${selectedScenario.Code} ${selectedScenario.EventType} ${selectedScenario.selectedSubtype ? ` - ${selectedScenario.selectedSubtype}` : ''}` 
+                  : 'Select scenario'}
               </span>
               <span className={`dropdown-arrow ${dropdownOpen ? 'open' : ''}`}>▼</span>
             </div>
             
             {dropdownOpen && (
               <div className="dropdown-menu">
-                {scenarios.map((scenario, index) => (
-                  <div
-                    key={`${scenario.Code}-${index}`}
-                    className="dropdown-item"
-                    onClick={() => {
-                      setSelectedScenario(scenario);
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    {scenario.Code} {scenario.EventType}
-                  </div>
-                ))}
+                {scenarios.flatMap((scenario, scenarioIndex) => 
+                  scenario.EventSubtypes.map((subtype, subtypeIndex) => (
+                    <div
+                      key={`${scenario.Code}-${scenarioIndex}-${subtypeIndex}`}
+                      className="dropdown-item"
+                      onClick={() => {
+                        setSelectedScenario({
+                          ...scenario,
+                          selectedSubtype: subtype
+                        });
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      {scenario.Code} - {scenario.EventType} - {subtype}
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
           
           <div className="location-time-display">
             <div className="location">
-              <span className="icon">📍</span>
+              <img src="/images/location.png" alt="location" className="location-icon" /> 
               <span>Calgary, Alberta</span>
             </div>
             <div className="time">
-              <span className="icon">🕐</span>
+              <img src="/images/clock.png" alt="clock" className="time-icon" /> 
               <span>{format(currentTime, 'h:mm a')}</span>
             </div>
           </div>
@@ -159,17 +165,14 @@ const ScenarioSelector = () => {
           onClick={handleSimulateCall}
           disabled={!selectedScenario || isLoading}
         >
-          <span className="phone-icon">📞</span>
+          <img src="/images/phone.png" alt="phone" className="phone-icon"/> 
           {isLoading ? 'Creating...' : 'Simulate Call'}
         </button>
         
         {selectedScenario && (
           <div className="selected-scenario-info">
             <small>
-              Selected: {selectedScenario.Code} - {selectedScenario.EventType}
-              {selectedScenario.EventSubtypes && selectedScenario.EventSubtypes.length > 0 && (
-                <span> ({selectedScenario.EventSubtypes.join(', ')})</span>
-              )}
+              Selected: {selectedScenario.Code} - {selectedScenario.EventType} - {selectedScenario.selectedSubtype || ''}
             </small>
           </div>
         )}

@@ -8,15 +8,6 @@ const CallWaiting = () => {
   const navigate = useNavigate();
   const { terminateSession } = useSession();
 
-  useEffect(() => {
-    // Simulate call pickup after 3 seconds
-    const timer = setTimeout(() => {
-      navigate(`/call/${sessionId}`);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [sessionId, navigate]);
-
   const handleTerminate = async () => {
     await terminateSession(sessionId);
     navigate('/');

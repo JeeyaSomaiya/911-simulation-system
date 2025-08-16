@@ -12,7 +12,7 @@
 }
 
 .stats-card {
-  background-color: var(--card-bg);
+  background-color: var(--primary-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 32px;
