@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '../services/useSession';
 import './styles/call-waiting.css';

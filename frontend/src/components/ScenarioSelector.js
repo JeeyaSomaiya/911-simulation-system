@@ -16,7 +16,6 @@ const ScenarioSelector = () => {
   const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    // Load scenarios from the real JSON structure
     const loadScenarios = async () => {
       try {
         const response = await fetch('/scenarios.json');
@@ -25,7 +24,6 @@ const ScenarioSelector = () => {
         }
         const data = await response.json();
         
-        // Validate that data is an array
         if (Array.isArray(data) && data.length > 0) {
           setScenarios(data);
         } else {
@@ -39,7 +37,6 @@ const ScenarioSelector = () => {
 
     loadScenarios();
 
-    // Update time every second
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -68,7 +65,6 @@ const ScenarioSelector = () => {
     }
   };
 
-  // Show loading state while scenarios are being loaded
   if (scenarios.length === 0 && !loadError) {
     return (
       <div className="scenario-selector">
@@ -80,7 +76,6 @@ const ScenarioSelector = () => {
     );
   }
 
-  // Show error state if scenarios failed to load
   if (loadError) {
     return (
       <div className="scenario-selector">
