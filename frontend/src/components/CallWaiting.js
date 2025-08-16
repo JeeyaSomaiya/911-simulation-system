@@ -18,18 +18,21 @@ const CallWaiting = () => {
 
   return (
     <div className="call-waiting">
-      <div className="call-controls-top">
-        <button className="btn-secondary" onClick={handleTerminate}>
-          Terminate Session
-        </button>
-        <button className="btn-secondary" onClick={handleRetry}>
-          🔄 Retry Call
-        </button>
-      </div>
+      <div className="call-waiting-card">
+        <div className="call-controls-top">
+          <button className="terminate-btn" onClick={handleTerminate}>
+            Terminate Session
+          </button>
+          <button className="retry-btn" disabled={true}>
+            <img src="/images/retry.png" alt="retry" className="retry-icon"/>
+            Retry Call
+          </button>
+        </div>
 
-      <div className="call-icon-container">
-        <div className="call-icon green active">
-          <span className="phone-symbol">📞</span>
+        <div className="call-icon-container">
+          <div className="call-icon green active">
+          <img src="/images/phone.png" alt="phone" className="pickup-icon"/>
+          </div>
         </div>
       </div>
     </div>
