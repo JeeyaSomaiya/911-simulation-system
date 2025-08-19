@@ -61,7 +61,9 @@ const CallInterface = () => {
   };
 
   const handleSendMessage = async () => {
+    console.log('handleSendMessage called with input:', inputMessage);
     if (inputMessage.trim() && !isSending) {
+      console.log('Message is valid, proceeding');
       setIsSending(true);
       
       const callTakerMessage = {
@@ -70,15 +72,23 @@ const CallInterface = () => {
         timestamp: new Date().toISOString()
       };
       
-      // Add call taker message to conversation immediately using functional update
-      setConversation(prev => [...prev, callTakerMessage]);
+      // Add call taker message to conversation immediately
+      console.log('Adding call taker message to conversation');
+      setConversation(prev => {
+        console.log('Previous conversation:', prev);
+        const newConversation = [...prev, callTakerMessage];
+        console.log('New conversation with call taker message:', newConversation);
+        return newConversation;
+      });
       setInputMessage('');
-
+  
       try {
+        console.log('About to call sendMessage with sessionId:', sessionId, 'and message:', inputMessage.trim());
         // Send message to backend and get caller response
         const response = await sendMessage(sessionId, inputMessage.trim());
+        console.log('Response from sendMessage:', response);
         
-        // Add caller response to conversation using functional update
+        // Add caller response to conversation
         const callerMessage = {
           role: 'caller',
           content: response.caller_response,
@@ -88,7 +98,12 @@ const CallInterface = () => {
           timestamp: new Date().toISOString()
         };
         
-        setConversation(prev => [...prev, callerMessage]);
+        console.log('Adding caller message to conversation');
+        setConversation(prev => {
+          const newConversation = [...prev, callerMessage];
+          console.log('New conversation with caller message:', newConversation);
+          return newConversation;
+        });
         
         // Update session info
         setSessionInfo(prev => ({
@@ -102,7 +117,7 @@ const CallInterface = () => {
       } catch (error) {
         console.error('Failed to send message:', error);
         
-        // Add error message to conversation using functional update
+        // Add error message to conversation
         const errorMessage = {
           role: 'system',
           content: 'Failed to get response from caller. Please try again.',
@@ -110,8 +125,11 @@ const CallInterface = () => {
         };
         setConversation(prev => [...prev, errorMessage]);
       } finally {
+        console.log('Finished sendMessage process');
         setIsSending(false);
       }
+    } else {
+      console.log('Message invalid or already sending');
     }
   };
 
