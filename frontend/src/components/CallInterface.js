@@ -6,7 +6,7 @@ import './styles/call-interface.css';
 const CallInterface = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { terminateSession, getSession, sendMessage } = useSession();
+  const { terminateSession, getSession, sendMessage, createSession } = useSession();
   
   const [conversation, setConversation] = useState([]);
   const [sessionInfo, setSessionInfo] = useState(null);
@@ -20,7 +20,7 @@ const CallInterface = () => {
   const inputRef = useRef(null);
   const hasLoadedSession = useRef(false);
 
-  // Load session info and initial message on mount - ONLY ONCE
+  // Load session info on mount - ONLY ONCE
   useEffect(() => {
     if (sessionId && !hasLoadedSession.current) {
       hasLoadedSession.current = true;
@@ -29,14 +29,7 @@ const CallInterface = () => {
         try {
           const sessionData = await getSession(sessionId);
           setSessionInfo(sessionData);
-          
-          // Add initial caller message based on scenario
-          const initialMessage = {
-            role: 'caller',
-            content: getInitialCallerMessage(sessionData.scenario_type),
-            timestamp: new Date().toISOString()
-          };
-          setConversation([initialMessage]);
+          // Don't add initial message - wait for user to start the conversation
         } catch (error) {
           console.error('Failed to load session:', error);
           alert('Failed to load session. Returning to main menu.');
@@ -143,23 +136,29 @@ const CallInterface = () => {
     navigate('/');
   };
 
-  const handleRetry = () => {
-    navigate('/');
-  };
-
-  const getInitialCallerMessage = (scenarioType) => {
-    const initialMessages = {
-      '10-01': "There's been a bad accident!",
-      '10-02': "I just saw a car accident!",
-      '10-30': "I found someone bleeding!",
-      '10-08H': "Intruders broke into my home!",
-      '10-83': "I'm seeing a dangerous driver!",
-      '10-34': "Someone stole gas!",
-      '10-21': "People are acting suspiciously!",
-      '10-07': "A man threatened to kill himself!",
-      '10-88': "I saw a car stopped on the road!"
-    };
-    return initialMessages[scenarioType] || "I need help!";
+  const handleRetry = async () => {
+    try {
+      // Terminate the current session first
+      await terminateSession(sessionId);
+      
+      // Create a new session with the same scenario type
+      if (sessionInfo && sessionInfo.scenario_type) {
+        // You might need to get the trainee_id from somewhere (localStorage, props, etc.)
+        const traineeId = "current-user-id"; // Replace with actual trainee ID
+        
+        const newSession = await createSession({
+          trainee_id: traineeId,
+          scenario_type: sessionInfo.scenario_type
+        });
+        
+        // Navigate to the new session
+        navigate(`/call/${newSession.session_id}`);
+      }
+    } catch (error) {
+      console.error('Failed to restart session:', error);
+      // If restart fails, just go to home page
+      navigate('/');
+    }
   };
 
   if (isLoading) {
@@ -180,15 +179,15 @@ const CallInterface = () => {
         </button>
         <button className="retry-btn" onClick={handleRetry}>
           <img src="/images/retry.png" alt="retry" className="retry-icon"/>
-          New Call
+          Retry Call
         </button>
       </div>
 
-      {/* Session Info - Show emotional state here instead of in transcript */}
+      {/* Session Info */}
       {sessionInfo && (
         <div className="session-info">
           <span>Scenario: {sessionInfo.scenario_type}</span>
-          <span>Emotional State: {sessionInfo.emotional_state}</span>
+          <span>Emotional State: {sessionInfo.emotional_state || 'Not started'}</span>
           <span>Progress: {Math.round((sessionInfo.scenario_progress || 0) * 100)}%</span>
         </div>
       )}
@@ -204,16 +203,22 @@ const CallInterface = () => {
             ref={transcriptRef}
             onScroll={handleScroll}
           >
-            {conversation.map((message, index) => (
-              <div key={index} className={`message ${message.role}`}>
-                <span className="role">
-                  {message.role === 'call_taker' ? 'Call Taker:' : 
-                   message.role === 'system' ? 'System:' : 'Caller:'}
-                </span>
-                {/* Only show the message content, not the emotional state */}
-                <span className="content">{message.content}</span>
+            {conversation.length === 0 ? (
+              <div className="message system">
+                <span className="role">System:</span>
+                <span className="content">Type a message to start the conversation...</span>
               </div>
-            ))}
+            ) : (
+              conversation.map((message, index) => (
+                <div key={index} className={`message ${message.role}`}>
+                  <span className="role">
+                    {message.role === 'call_taker' ? 'Call Taker:' : 
+                     message.role === 'system' ? 'System:' : 'Caller:'}
+                  </span>
+                  <span className="content">{message.content}</span>
+                </div>
+              ))
+            )}
             
             {isSending && (
               <div className="message caller typing">
@@ -229,7 +234,7 @@ const CallInterface = () => {
             ref={inputRef}
             type="text"
             className="message-input"
-            placeholder={isSending ? "Waiting for response..." : "Type your response..."}
+            placeholder={isSending ? "Waiting for response..." : "Type your response to start the call..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={isSending}
