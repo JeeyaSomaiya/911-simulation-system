@@ -229,7 +229,7 @@ const CallInterface = () => {
             ref={inputRef}
             type="text"
             className="message-input"
-            placeholder={isSending ? "Waiting for response..." : "Type your response to start the call..."}
+            placeholder={isSending ? "Waiting for response..." : "Type your response ..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={isSending || isRestarting}
