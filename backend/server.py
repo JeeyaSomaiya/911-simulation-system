@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-CORS(app, origins=["http://localhost:3000"], methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["Content-Type"])
+CORS(app)
 
 try:
     redis_client = redis.Redis(
