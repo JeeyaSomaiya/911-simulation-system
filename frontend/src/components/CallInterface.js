@@ -16,7 +16,8 @@ const CallInterface = () => {
   const [isSending, setIsSending] = useState(false);
   
   const transcriptRef = useRef(null);
-  const isSendingRef = useRef(false); // Use ref to track sending state
+  const isSendingRef = useRef(false);
+  const inputRef = useRef(null);
 
   // Load session info and initial message on mount
   useEffect(() => {
@@ -61,8 +62,25 @@ const CallInterface = () => {
     }
   };
 
-  // Use useCallback to memoize the function and prevent unnecessary re-renders
-  const handleSendMessage = useCallback(async () => {
+  // Use useEffect to set up event listeners only once
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && !isSendingRef.current && inputRef.current === document.activeElement) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyPress);
+
+    // Clean up
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []); // Empty dependency array means this runs only once
+
+  const handleSendMessage = async () => {
     // Use ref to check if already sending (more reliable than state)
     if (inputMessage.trim() && !isSendingRef.current) {
       isSendingRef.current = true;
@@ -76,11 +94,12 @@ const CallInterface = () => {
       
       // Add call taker message to conversation immediately
       setConversation(prev => [...prev, callTakerMessage]);
+      const messageToSend = inputMessage.trim();
       setInputMessage('');
 
       try {
         // Send message to backend and get caller response
-        const response = await sendMessage(sessionId, inputMessage.trim());
+        const response = await sendMessage(sessionId, messageToSend);
         
         // Add caller response to conversation
         const callerMessage = {
@@ -118,13 +137,7 @@ const CallInterface = () => {
         isSendingRef.current = false;
       }
     }
-  }, [inputMessage, sessionId, sendMessage]);
-
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter' && !isSendingRef.current) {
-      handleSendMessage();
-    }
-  }, [handleSendMessage]);
+  };
 
   const handleTerminate = async () => {
     try {
@@ -220,17 +233,20 @@ const CallInterface = () => {
         
         <div className="message-input-container">
           <input
+            ref={inputRef}
             type="text"
             className="message-input"
             placeholder={isSending ? "Waiting for response..." : "Type your response..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
             disabled={isSending}
           />
           <button 
             className="send-button"
-            onClick={handleSendMessage}
+            onClick={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
             disabled={!inputMessage.trim() || isSending}
           >
             {isSending ? 'Sending...' : 'Send'}
