@@ -66,7 +66,7 @@ const CallInterface = () => {
         content: inputMessage.trim(),
         timestamp: new Date().toISOString()
       };
-      
+
       setConversation(prev => [...prev, callTakerMessage]);
       setShouldAutoScroll(true);
       setInputMessage('');
@@ -97,6 +97,7 @@ const CallInterface = () => {
       } catch (error) {
         console.error('Failed to send message:', error);
         
+        // Add error message to conversation
         const errorMessage = {
           role: 'system',
           content: 'Failed to get response from caller. Please try again.',
@@ -164,15 +165,6 @@ const CallInterface = () => {
           New Call
         </button>
       </div>
-
-      {/* Session Info */}
-      {sessionInfo && (
-        <div className="session-info">
-          <span>Scenario: {sessionInfo.scenario_type}</span>
-          <span>Emotional State: {sessionInfo.emotional_state}</span>
-          <span>Progress: {Math.round((sessionInfo.scenario_progress || 0) * 100)}%</span>
-        </div>
-      )}
 
       <div className="transcript-container">
         <div className="transcript-display">
