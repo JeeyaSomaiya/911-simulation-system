@@ -183,15 +183,6 @@ const CallInterface = () => {
         </button>
       </div>
 
-      {/* Session Info */}
-      {sessionInfo && (
-        <div className="session-info">
-          <span>Scenario: {sessionInfo.scenario_type}</span>
-          <span>Emotional State: {sessionInfo.emotional_state || 'Not started'}</span>
-          <span>Progress: {Math.round((sessionInfo.scenario_progress || 0) * 100)}%</span>
-        </div>
-      )}
-
       <div className="transcript-container">
         <div className="transcript-display">
           <div className="transcript-header">
