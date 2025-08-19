@@ -18,31 +18,35 @@ const CallInterface = () => {
   const transcriptRef = useRef(null);
   const isSendingRef = useRef(false);
   const inputRef = useRef(null);
+  const hasLoadedSession = useRef(false); // Track if we've already loaded the session
 
-  // Load session info and initial message on mount
+  // Load session info and initial message on mount - ONLY ONCE
   useEffect(() => {
-    const loadSession = async () => {
-      try {
-        const sessionData = await getSession(sessionId);
-        setSessionInfo(sessionData);
-        
-        // Add initial caller message based on scenario
-        const initialMessage = {
-          role: 'caller',
-          content: getInitialCallerMessage(sessionData.scenario_type),
-          timestamp: new Date().toISOString()
-        };
-        setConversation([initialMessage]);
-      } catch (error) {
-        console.error('Failed to load session:', error);
-        alert('Failed to load session. Returning to main menu.');
-        navigate('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Only load the session if we haven't already loaded it
+    if (sessionId && !hasLoadedSession.current) {
+      hasLoadedSession.current = true; // Mark as loaded
+      
+      const loadSession = async () => {
+        try {
+          const sessionData = await getSession(sessionId);
+          setSessionInfo(sessionData);
+          
+          // Add initial caller message based on scenario
+          const initialMessage = {
+            role: 'caller',
+            content: getInitialCallerMessage(sessionData.scenario_type),
+            timestamp: new Date().toISOString()
+          };
+          setConversation([initialMessage]);
+        } catch (error) {
+          console.error('Failed to load session:', error);
+          alert('Failed to load session. Returning to main menu.');
+          navigate('/');
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-    if (sessionId) {
       loadSession();
     }
   }, [sessionId, getSession, navigate]);
