@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '../services/useSession';
 import './styles/call-interface.css';
@@ -16,6 +16,7 @@ const CallInterface = () => {
   const [isSending, setIsSending] = useState(false);
   
   const transcriptRef = useRef(null);
+  const isSendingRef = useRef(false); // Use ref to track sending state
 
   // Load session info and initial message on mount
   useEffect(() => {
@@ -60,10 +61,11 @@ const CallInterface = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    console.log('handleSendMessage called with input:', inputMessage);
-    if (inputMessage.trim() && !isSending) {
-      console.log('Message is valid, proceeding');
+  // Use useCallback to memoize the function and prevent unnecessary re-renders
+  const handleSendMessage = useCallback(async () => {
+    // Use ref to check if already sending (more reliable than state)
+    if (inputMessage.trim() && !isSendingRef.current) {
+      isSendingRef.current = true;
       setIsSending(true);
       
       const callTakerMessage = {
@@ -73,20 +75,12 @@ const CallInterface = () => {
       };
       
       // Add call taker message to conversation immediately
-      console.log('Adding call taker message to conversation');
-      setConversation(prev => {
-        console.log('Previous conversation:', prev);
-        const newConversation = [...prev, callTakerMessage];
-        console.log('New conversation with call taker message:', newConversation);
-        return newConversation;
-      });
+      setConversation(prev => [...prev, callTakerMessage]);
       setInputMessage('');
-  
+
       try {
-        console.log('About to call sendMessage with sessionId:', sessionId, 'and message:', inputMessage.trim());
         // Send message to backend and get caller response
         const response = await sendMessage(sessionId, inputMessage.trim());
-        console.log('Response from sendMessage:', response);
         
         // Add caller response to conversation
         const callerMessage = {
@@ -98,12 +92,7 @@ const CallInterface = () => {
           timestamp: new Date().toISOString()
         };
         
-        console.log('Adding caller message to conversation');
-        setConversation(prev => {
-          const newConversation = [...prev, callerMessage];
-          console.log('New conversation with caller message:', newConversation);
-          return newConversation;
-        });
+        setConversation(prev => [...prev, callerMessage]);
         
         // Update session info
         setSessionInfo(prev => ({
@@ -125,19 +114,17 @@ const CallInterface = () => {
         };
         setConversation(prev => [...prev, errorMessage]);
       } finally {
-        console.log('Finished sendMessage process');
         setIsSending(false);
+        isSendingRef.current = false;
       }
-    } else {
-      console.log('Message invalid or already sending');
     }
-  };
+  }, [inputMessage, sessionId, sendMessage]);
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !isSending) {
+  const handleKeyPress = useCallback((e) => {
+    if (e.key === 'Enter' && !isSendingRef.current) {
       handleSendMessage();
     }
-  };
+  }, [handleSendMessage]);
 
   const handleTerminate = async () => {
     try {
@@ -232,27 +219,22 @@ const CallInterface = () => {
         </div>
         
         <div className="message-input-container">
-        <input
-          type="text"
-          className="message-input"
-          placeholder={isSending ? "Waiting for response..." : "Type your response..."}
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !isSending) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
-          disabled={isSending}
-        />
-        <button 
-          className="send-button"
-          onClick={handleSendMessage}
-          disabled={!inputMessage.trim() || isSending}
-        >
-          {isSending ? 'Sending...' : 'Send'}
-        </button>
+          <input
+            type="text"
+            className="message-input"
+            placeholder={isSending ? "Waiting for response..." : "Type your response..."}
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            disabled={isSending}
+          />
+          <button 
+            className="send-button"
+            onClick={handleSendMessage}
+            disabled={!inputMessage.trim() || isSending}
+          >
+            {isSending ? 'Sending...' : 'Send'}
+          </button>
         </div>
       </div>
 
