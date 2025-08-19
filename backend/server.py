@@ -12,17 +12,14 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room, leave_room
 import redis
-from threading import Thread
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-CORS(app, origins="*")
-socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", async_mode='threading')
+CORS(app, origins=["http://localhost:3000"], methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["Content-Type"])
 
 try:
     redis_client = redis.Redis(
@@ -247,15 +244,6 @@ class HuggingFaceCallerGenerator:
                 "current_status": "Dark SUV parked on shoulder. Driver appears to be a white male in green jacket.",
                 "caller_background": "Drive-by caller reporting traffic hazard. Not stopping but concerned about stopped vehicle.",
                 "initial_response": "I saw a car stopped on the road!"
-            },
-            ScenarioType.ROBBERY_10_30: {
-                "location": "Chinook LRT parking lot",
-                "caller_name": "Tony Watson", 
-                "phone": "403-665-1245",
-                "situation": "Friend stabbed during robbery attempt. Suspect demanded phones and stabbed victim when resisted.",
-                "current_status": "Victim bleeding from arm wound. Suspect described as white male, 20yrs, 5'8, 200lbs, black hair, blue cap, grey jacket. Stole phone and wallet.",
-                "caller_background": "Friend of victim who witnessed the attack. Shaken and applying first aid.",
-                "initial_response": "My friend was hurt!"
             },
             ScenarioType.THEFT_10_34: {
                 "location": "705 8 ST SW",
@@ -733,67 +721,6 @@ def send_message(session_id):
         logger.error(f"Error processing message: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@socketio.on('connect')
-def handle_connect():
-    logger.info(f"Client connected: {request.sid}")
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    logger.info(f"Client disconnected: {request.sid}")
-
-@socketio.on('join_session')
-def handle_join_session(data):
-    session_id = data.get('session_id')
-    if session_id:
-        join_room(session_id)
-        logger.info(f"Client joined session {session_id}")
-
-@socketio.on('leave_session')
-def handle_leave_session(data):
-    session_id = data.get('session_id')
-    if session_id:
-        leave_room(session_id)
-        logger.info(f"Client left session {session_id}")
-
-@socketio.on('call_taker_message')
-def handle_call_taker_message(data):
-    try:
-        session_id = data.get('session_id')
-        message = data.get('message', '')
-        
-        session = session_manager.get_session(session_id)
-        if not session:
-            emit('error', {'message': 'Session not found'})
-            return
-
-        def generate_response():
-            try:
-                caller_response, updated_state = generator.generate_response(
-                    session.caller_state, message
-                )
-                
-                session_manager.update_session(session_id, updated_state)
-                
-                logger.info(f"Generated response for {session_id}")
-                
-                socketio.emit('caller_response', {
-                    'caller_response': caller_response,
-                    'emotional_state': updated_state.emotional_state.value,
-                    'intensity': updated_state.intensity,
-                    'scenario_progress': updated_state.scenario_progress,
-                    'key_details_revealed': updated_state.key_details_revealed
-                }, room=session_id)
-                
-            except Exception as e:
-                logger.error(f"Error generating response: {e}")
-                socketio.emit('error', {'message': 'Failed to generate response'}, room=session_id)
-
-        Thread(target=generate_response, daemon=True).start()
-        
-    except Exception as e:
-        logger.error(f"Error handling message: {e}")
-        emit('error', {'message': 'Internal server error'})
-
 @app.route('/health')
 def health_check():
     return jsonify({
@@ -805,15 +732,15 @@ def health_check():
     })
 
 if __name__ == '__main__':
-    logger.info("Starting 911 Call Simulation Server with Hugging Face Llama")
+    logger.info("Starting 911 Call Simulation Server")
     logger.info(f"Using Llama-3.1-8B from: {generator.model_path}")
     logger.info("Press Ctrl+C to stop")
     
-    socketio.run(
-        app,
+    app.run(
         host='0.0.0.0',
         port=5000,
         debug=True,
         allow_unsafe_werkzeug=True,
         log_output=True
     )
+    
