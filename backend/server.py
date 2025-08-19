@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-CORS(app, origins=["http://localhost:3000"])
+CORS(app, origins="*")
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", async_mode='threading')
 
 try:
