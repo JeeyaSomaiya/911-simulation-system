@@ -373,10 +373,11 @@ Emotional state: {caller_state.emotional_state.value}
 {role_clarification}
 
 You are a real person reporting an emergency. Respond ONLY with what you would actually say to a 911 operator:
-- Keep initial responses to 1 SHORT sentence
+- Keep responses to 1-2 natural sentences
+- NEVER describe your physical actions or state (e.g., no "breathing quickly", "crying", etc.)
+- Express emotion through speech patterns, not descriptions
 - DO NOT volunteer detailed information upfront
 - Only provide specific details when asked
-- Show urgency through natural speech patterns
 - Stay in character as {context['caller_name']}
 
 SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_question_response}"""
@@ -413,6 +414,14 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
             end = response.find(')', start)
             if end != -1:
                 response = response[:start] + response[end+1:]
+                
+        forbidden_phrases = [
+            "breathing quickly", "taking deep breaths", "shaking", 
+            "crying", "sobbing", "hyperventilating", "pacing", 
+            "holding my chest", "clutching my heart"
+        ]
+        for phrase in forbidden_phrases:
+            response = response.replace(phrase, "")
         
         return response.strip()
     
