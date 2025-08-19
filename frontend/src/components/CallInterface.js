@@ -7,24 +7,50 @@ import './styles/call-interface.css';
 const CallInterface = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { sendMessage, terminateSession } = useSession();
-  const { transcript, isConnected } = useWebSocket(sessionId);
-  const [conversation, setConversation] = useState([
-    { role: 'call_taker', content: "What's the address of the emergency?" },
-    { role: 'caller', content: "My address is 65 Eldorado CL NE" },
-    { role: 'call_taker', content: "What's the phone number you're calling from?" },
-    { role: 'caller', content: "403-441-7845" },
-    { role: 'call_taker', content: "What's your name?" },
-    { role: 'caller', content: "Harry Winston" },
-    { role: 'call_taker', content: "Ok, tell me exactly what happened." },
-    { role: 'caller', content: "I heard 2 gunshots across the street about 60 seconds ago. I saw the guy who lives at 68 Eldorado CL NE go into the house. He had a hand gun in his right hand. I heard yelling and screaming coming from that house earlier today" }
-  ]);
+  const { terminateSession, getSession } = useSession();
+  const { transcript, isConnected, sendCallTakerMessage, error: wsError } = useWebSocket(sessionId);
+  
+  const [conversation, setConversation] = useState([]);
+  const [sessionInfo, setSessionInfo] = useState(null);
+  const [inputMessage, setInputMessage] = useState('');
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   
   const transcriptRef = useRef(null);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-  const [inputMessage, setInputMessage] = useState('');
 
-  // Use useLayoutEffect to ensure scroll happens after DOM update
+  useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const sessionData = await getSession(sessionId);
+        setSessionInfo(sessionData);
+        
+        const initialMessage = {
+          role: 'caller',
+          content: getInitialCallerMessage(sessionData.scenario_type),
+          timestamp: new Date().toISOString()
+        };
+        setConversation([initialMessage]);
+      } catch (error) {
+        console.error('Failed to load session:', error);
+        alert('Failed to load session. Returning to main menu.');
+        navigate('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (sessionId) {
+      loadSession();
+    }
+  }, [sessionId, getSession, navigate]);
+
+  useEffect(() => {
+    if (transcript) {
+      setConversation(prev => [...prev, transcript]);
+      setShouldAutoScroll(true);
+    }
+  }, [transcript]);
+
   useLayoutEffect(() => {
     if (shouldAutoScroll && transcriptRef.current) {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
@@ -39,23 +65,18 @@ const CallInterface = () => {
     }
   };
 
-  useEffect(() => {
-    if (transcript) {
-      setConversation(prev => [...prev, transcript]);
-    }
-  }, [transcript]);
-
   const handleSendMessage = () => {
-    if (inputMessage.trim()) {
+    if (inputMessage.trim() && isConnected) {
       const newMessage = {
         role: 'call_taker',
-        content: inputMessage.trim()
+        content: inputMessage.trim(),
+        timestamp: new Date().toISOString()
       };
       
-      setShouldAutoScroll(true);
       setConversation(prev => [...prev, newMessage]);
+      setShouldAutoScroll(true);
 
-      sendMessage(inputMessage.trim());
+      sendCallTakerMessage(inputMessage.trim());
       
       setInputMessage('');
     }
@@ -68,13 +89,43 @@ const CallInterface = () => {
   };
 
   const handleTerminate = async () => {
-    await terminateSession(sessionId);
-    navigate('/');
+    try {
+      await terminateSession(sessionId);
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to terminate session:', error);
+      navigate('/');
+    }
   };
 
   const handleRetry = () => {
-    navigate('/new-call');
+    navigate('/');
   };
+
+  const getInitialCallerMessage = (scenarioType) => {
+    const initialMessages = {
+      '10-01': "There's been a bad accident!",
+      '10-02': "I just saw a car accident!",
+      '10-30': "I found someone bleeding!",
+      '10-08H': "Intruders broke into my home!",
+      '10-83': "I'm seeing a dangerous driver!",
+      '10-34': "Someone stole gas!",
+      '10-21': "People are acting suspiciously!",
+      '10-07': "A man threatened to kill himself!",
+      '10-88': "I saw a car stopped on the road!"
+    };
+    return initialMessages[scenarioType] || "I need help!";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="call-interface">
+        <div className="loading-container">
+          <h3>Loading call session...</h3>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="call-interface">
@@ -83,10 +134,25 @@ const CallInterface = () => {
           Terminate Session
         </button>
         <button className="retry-btn" onClick={handleRetry}>
-        <img src="/images/retry.png" alt="retry" className="retry-icon"/>
-          Retry Call
+          <img src="/images/retry.png" alt="retry" className="retry-icon"/>
+          New Call
         </button>
       </div>
+
+      {/* Connection Status */}
+      <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+        {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+        {wsError && <span className="error-text"> - {wsError}</span>}
+      </div>
+
+      {/* Session Info */}
+      {sessionInfo && (
+        <div className="session-info">
+          <span>Scenario: {sessionInfo.scenario_type}</span>
+          <span>Emotional State: {sessionInfo.emotional_state}</span>
+          <span>Progress: {Math.round(sessionInfo.scenario_progress * 100)}%</span>
+        </div>
+      )}
 
       <div className="transcript-container">
         <div className="transcript-display">
@@ -105,6 +171,9 @@ const CallInterface = () => {
                   {message.role === 'call_taker' ? 'Call Taker:' : 'Caller:'}
                 </span>
                 <span className="content">{message.content}</span>
+                {message.emotional_state && (
+                  <span className="emotional-state">({message.emotional_state})</span>
+                )}
               </div>
             ))}
           </div>
@@ -114,15 +183,16 @@ const CallInterface = () => {
           <input
             type="text"
             className="message-input"
-            placeholder="Type your response..."
+            placeholder={isConnected ? "Type your response..." : "Connecting..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
+            disabled={!isConnected}
           />
           <button 
             className="send-button"
             onClick={handleSendMessage}
-            disabled={!inputMessage.trim()}
+            disabled={!inputMessage.trim() || !isConnected}
           >
             Send
           </button>
@@ -132,7 +202,7 @@ const CallInterface = () => {
       <div className="call-controls-bottom">
         <button className="hang-up-button" onClick={handleTerminate}>
           <div className="call-icon red">
-          <img src="/images/phone.png" alt="phone" className="hangup-icon"/>
+            <img src="/images/phone.png" alt="phone" className="hangup-icon"/>
           </div>
         </button>
       </div>

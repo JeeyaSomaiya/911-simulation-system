@@ -6,12 +6,11 @@ import './styles/scenario-selector.css';
 
 const ScenarioSelector = () => {
   const navigate = useNavigate();
-  const { createSession } = useSession();
+  const { createSession, isLoading: sessionLoading, error: sessionError } = useSession();
   const [scenarios, setScenarios] = useState([]);
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [realtimeTranscription, setRealtimeTranscription] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
@@ -50,20 +49,26 @@ const ScenarioSelector = () => {
       return;
     }
     
-    setIsLoading(true);
     try {
-      const session = await createSession({
+      const sessionData = await createSession({
         trainee_id: 'user_' + Date.now(),
         scenario_type: selectedScenario.Code
       });
       
-      navigate(`/call-waiting/${session.session_id}`);
+      console.log('Session created:', sessionData);
+      
+      navigate(`/call-waiting/${sessionData.session_id}`);
     } catch (error) {
       console.error('Failed to create session:', error);
-      alert('Failed to create session. Please try again.');
-      setIsLoading(false);
+      alert(`Failed to create session: ${error.message}`);
     }
   };
+
+  useEffect(() => {
+    if (sessionError) {
+      alert(`Session error: ${sessionError}`);
+    }
+  }, [sessionError]);
 
   if (scenarios.length === 0 && !loadError) {
     return (
@@ -158,10 +163,10 @@ const ScenarioSelector = () => {
         <button 
           className="simulate-call-btn"
           onClick={handleSimulateCall}
-          disabled={!selectedScenario || isLoading}
+          disabled={!selectedScenario || sessionLoading}
         >
           <img src="/images/phone.png" alt="phone" className="phone-icon"/> 
-          {isLoading ? 'Creating...' : 'Simulate Call'}
+          {sessionLoading ? 'Creating...' : 'Simulate Call'}
         </button>
         
         {selectedScenario && (

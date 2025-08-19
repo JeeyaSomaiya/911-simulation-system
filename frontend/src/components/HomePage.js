@@ -7,34 +7,38 @@ const HomePage = () => {
 
   return (
     <div className="homepage">
-      <div className="stats-container">
-        <div className="stats-card">
-          <div className="stats-value">0</div>
-          <div className="stats-title">Calls</div>
+      {/* Main card containing stats and CTA button */}
+      <div className="main-card">
+        <div className="stats-container">
+          <div className="stats-card">
+            <div className="stats-value">0</div>
+            <div className="stats-title">Calls</div>
+          </div>
+          <div className="stats-card">
+            <div className="stats-value">0</div>
+            <div className="stats-title">Complete Assignments</div>
+          </div>
         </div>
-        <div className="stats-card">
-          <div className="stats-value">0</div>
-          <div className="stats-title">Complete Assignments</div>
+
+        <div className="cta-section">
+          <button 
+            className="simulate-call-btn"
+            onClick={() => navigate('/new-call')}
+          >
+            <img src="/images/phone.png" alt="phone" className="phone-icon"/>
+            Simulate Call
+          </button>
         </div>
       </div>
 
-      <div className="cta-section">
-        <button 
-          className="simulate-call-btn"
-          onClick={() => navigate('/new-call')}
-        >
-          <span className="phone-icon">📞</span>
-          Simulate Call
-        </button>
-      </div>
-
+      {/* Separate cards for assignments and history */}
       <div className="sections-container">
-        <div className="assignments-section card">
+        <div className="assignments-section">
           <h3>Assignments</h3>
           <p className="empty-state">No assignments found</p>
         </div>
         
-        <div className="history-section card">
+        <div className="history-section">
           <h3>History</h3>
           <p className="empty-state">No calls found</p>
         </div>

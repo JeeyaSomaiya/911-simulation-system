@@ -1,5 +1,5 @@
 .header {
-  height: 60px;
+  height: 80px;
   background-color: var(--primary-bg);
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -25,7 +25,12 @@
 }
 
 .logo h1 {
-  font-size: 20px;
+  font-size: 30px;
   font-weight: 600;
   margin: 0;
+}
+
+.logo-icon{
+  height: 55px;
+  width: 55px;
 }

@@ -6,7 +6,7 @@ const Header = () => {
     <header className="header">
       <div className="header-content">
         <div className="logo">
-          <img src="/images/headset.png" alt="logo" style={{ width: '40px', height: '40px' }}/>
+          <img src="/images/headset.png" alt="logo" className='logo-icon'/>
           <h1>AI Call Simulator</h1>
         </div>
       </div>

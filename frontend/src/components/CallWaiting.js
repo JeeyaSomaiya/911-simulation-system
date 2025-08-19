@@ -1,3 +1,4 @@
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '../services/useSession';
 import './styles/call-waiting.css';
@@ -12,8 +13,8 @@ const CallWaiting = () => {
     navigate('/');
   };
 
-  const handleRetry = () => {
-    navigate('/new-call');
+  const handlePickup = () => {
+    navigate(`/call/${sessionId}`);
   };
 
   return (
@@ -30,9 +31,9 @@ const CallWaiting = () => {
         </div>
 
         <div className="call-icon-container">
-          <div className="call-icon green active">
-          <img src="/images/phone.png" alt="phone" className="pickup-icon"/>
-          </div>
+          <button className="call-icon green active pickup-button" onClick={handlePickup}>
+            <img src="/images/phone.png" alt="phone" className="pickup-icon"/>
+          </button>
         </div>
       </div>
     </div>
