@@ -232,22 +232,27 @@ const CallInterface = () => {
         </div>
         
         <div className="message-input-container">
-          <input
-            type="text"
-            className="message-input"
-            placeholder={isSending ? "Waiting for response..." : "Type your response..."}
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isSending}
-          />
-          <button 
-            className="send-button"
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isSending}
-          >
-            {isSending ? 'Sending...' : 'Send'}
-          </button>
+        <input
+          type="text"
+          className="message-input"
+          placeholder={isSending ? "Waiting for response..." : "Type your response..."}
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !isSending) {
+              e.preventDefault();
+              handleSendMessage();
+            }
+          }}
+          disabled={isSending}
+        />
+        <button 
+          className="send-button"
+          onClick={handleSendMessage}
+          disabled={!inputMessage.trim() || isSending}
+        >
+          {isSending ? 'Sending...' : 'Send'}
+        </button>
         </div>
       </div>
 
