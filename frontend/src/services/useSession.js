@@ -37,64 +37,40 @@ export const useSession = () => {
   };
 
   const getSession = async (sessionId) => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
+      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (err) {
       setError(err.message);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const sendMessage = async (sessionId, message) => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
       const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message
-        }),
+        body: JSON.stringify({ message }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (err) {
       setError(err.message);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const terminateSession = async (sessionId) => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
       const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/end`, {
         method: 'POST',
@@ -107,13 +83,10 @@ export const useSession = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (err) {
       setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
+      return null;
     }
   };
 
