@@ -8,8 +8,6 @@ import CallInterface from './components/CallInterface';
 
 function App() {
   return (
-    <SessionProvider>
-      <WebSocketProvider>
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -18,8 +16,6 @@ function App() {
             <Route path="/call/:sessionId" element={<CallInterface />} />
           </Routes>
         </Layout>
-      </WebSocketProvider>
-    </SessionProvider>
   );
 }
 
