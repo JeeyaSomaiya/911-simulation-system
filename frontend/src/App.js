@@ -1,7 +1,5 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { SessionProvider } from './context/SessionContext';
-import { WebSocketProvider } from './context/WebSocketContext';
 import Layout from './components/Layout';
 import HomePage from './components/HomePage';
 import ScenarioSelector from './components/ScenarioSelector';
