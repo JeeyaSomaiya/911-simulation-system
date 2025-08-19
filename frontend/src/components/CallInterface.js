@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '../services/useSession';
 import './styles/call-interface.css';
@@ -14,6 +14,7 @@ const CallInterface = () => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
   
   const transcriptRef = useRef(null);
   const isSendingRef = useRef(false);
@@ -29,7 +30,6 @@ const CallInterface = () => {
         try {
           const sessionData = await getSession(sessionId);
           setSessionInfo(sessionData);
-          // Don't add initial message - wait for user to start the conversation
         } catch (error) {
           console.error('Failed to load session:', error);
           alert('Failed to load session. Returning to main menu.');
@@ -137,15 +137,13 @@ const CallInterface = () => {
   };
 
   const handleRetry = async () => {
+    setIsRestarting(true);
     try {
-      // Terminate the current session first
-      await terminateSession(sessionId);
+      // Get trainee_id from localStorage or use a default
+      const traineeId = localStorage.getItem('trainee_id') || 'default-trainee-id';
       
       // Create a new session with the same scenario type
       if (sessionInfo && sessionInfo.scenario_type) {
-        // You might need to get the trainee_id from somewhere (localStorage, props, etc.)
-        const traineeId = "current-user-id"; // Replace with actual trainee ID
-        
         const newSession = await createSession({
           trainee_id: traineeId,
           scenario_type: sessionInfo.scenario_type
@@ -153,11 +151,13 @@ const CallInterface = () => {
         
         // Navigate to the new session
         navigate(`/call/${newSession.session_id}`);
+        window.location.reload(); // Force reload to reset the component completely
       }
     } catch (error) {
       console.error('Failed to restart session:', error);
-      // If restart fails, just go to home page
-      navigate('/');
+      alert('Failed to restart the call. Please try again.');
+    } finally {
+      setIsRestarting(false);
     }
   };
 
@@ -177,9 +177,13 @@ const CallInterface = () => {
         <button className="terminate-btn" onClick={handleTerminate}>
           Terminate Session
         </button>
-        <button className="retry-btn" onClick={handleRetry}>
+        <button 
+          className="retry-btn" 
+          onClick={handleRetry}
+          disabled={isRestarting}
+        >
           <img src="/images/retry.png" alt="retry" className="retry-icon"/>
-          Retry Call
+          {isRestarting ? 'Restarting...' : 'Retry Call'}
         </button>
       </div>
 
@@ -228,7 +232,7 @@ const CallInterface = () => {
             placeholder={isSending ? "Waiting for response..." : "Type your response to start the call..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            disabled={isSending}
+            disabled={isSending || isRestarting}
           />
           <button 
             className="send-button"
@@ -236,7 +240,7 @@ const CallInterface = () => {
               e.preventDefault();
               handleSendMessage();
             }}
-            disabled={!inputMessage.trim() || isSending}
+            disabled={!inputMessage.trim() || isSending || isRestarting}
           >
             {isSending ? 'Sending...' : 'Send'}
           </button>
