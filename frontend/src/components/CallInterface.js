@@ -62,22 +62,23 @@ const CallInterface = () => {
 
   const handleSendMessage = async () => {
     if (inputMessage.trim() && !isSending) {
-      const messageToSend = inputMessage.trim();
       setIsSending(true);
-      setInputMessage('');
       
       const callTakerMessage = {
         role: 'call_taker',
-        content: messageToSend,
+        content: inputMessage.trim(),
         timestamp: new Date().toISOString()
       };
-  
+      
+      // Add call taker message to conversation immediately using functional update
       setConversation(prev => [...prev, callTakerMessage]);
-      setShouldAutoScroll(true);
-  
+      setInputMessage('');
+
       try {
-        const response = await sendMessage(sessionId, messageToSend);
+        // Send message to backend and get caller response
+        const response = await sendMessage(sessionId, inputMessage.trim());
         
+        // Add caller response to conversation using functional update
         const callerMessage = {
           role: 'caller',
           content: response.caller_response,
@@ -88,8 +89,8 @@ const CallInterface = () => {
         };
         
         setConversation(prev => [...prev, callerMessage]);
-        setShouldAutoScroll(true);
         
+        // Update session info
         setSessionInfo(prev => ({
           ...prev,
           emotional_state: response.emotional_state,
@@ -101,6 +102,7 @@ const CallInterface = () => {
       } catch (error) {
         console.error('Failed to send message:', error);
         
+        // Add error message to conversation using functional update
         const errorMessage = {
           role: 'system',
           content: 'Failed to get response from caller. Please try again.',
