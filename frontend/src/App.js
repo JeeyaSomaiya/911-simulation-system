@@ -12,7 +12,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/new-call" element={<ScenarioSelector />} />
-            <Route path="/call-waiting:sessionId" element={<CallWaiting />} />
+            <Route path="/call-waiting/:sessionId" element={<CallWaiting />} />
             <Route path="/call/:sessionId" element={<CallInterface />} />
           </Routes>
         </Layout>
