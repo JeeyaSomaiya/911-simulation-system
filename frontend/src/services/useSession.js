@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://130.250.171.84:5000';
 
 export const useSession = () => {
   const [isLoading, setIsLoading] = useState(false);
