@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000';
 
 export const useSession = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,7 +11,7 @@ export const useSession = () => {
     setError(null);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/sessions`, {
+      const response = await fetch(`${API_BASE_URL}/api/sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ export const useSession = () => {
 
   const getSession = async (sessionId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`);
+      const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -51,7 +51,7 @@ export const useSession = () => {
 
   const sendMessage = async (sessionId, message) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/message`, {
+      const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export const useSession = () => {
 
   const terminateSession = async (sessionId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/end`, {
+      const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}/end`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
