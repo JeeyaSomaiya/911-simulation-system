@@ -18,13 +18,12 @@ const CallInterface = () => {
   const transcriptRef = useRef(null);
   const isSendingRef = useRef(false);
   const inputRef = useRef(null);
-  const hasLoadedSession = useRef(false); // Track if we've already loaded the session
+  const hasLoadedSession = useRef(false);
 
   // Load session info and initial message on mount - ONLY ONCE
   useEffect(() => {
-    // Only load the session if we haven't already loaded it
     if (sessionId && !hasLoadedSession.current) {
-      hasLoadedSession.current = true; // Mark as loaded
+      hasLoadedSession.current = true;
       
       const loadSession = async () => {
         try {
@@ -75,17 +74,14 @@ const CallInterface = () => {
       }
     };
 
-    // Add event listener
     document.addEventListener('keydown', handleKeyPress);
 
-    // Clean up
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, []); // Empty dependency array means this runs only once
+  }, []);
 
   const handleSendMessage = async () => {
-    // Use ref to check if already sending (more reliable than state)
     if (inputMessage.trim() && !isSendingRef.current) {
       isSendingRef.current = true;
       setIsSending(true);
@@ -96,16 +92,13 @@ const CallInterface = () => {
         timestamp: new Date().toISOString()
       };
       
-      // Add call taker message to conversation immediately
       setConversation(prev => [...prev, callTakerMessage]);
       const messageToSend = inputMessage.trim();
       setInputMessage('');
 
       try {
-        // Send message to backend and get caller response
         const response = await sendMessage(sessionId, messageToSend);
         
-        // Add caller response to conversation
         const callerMessage = {
           role: 'caller',
           content: response.caller_response,
@@ -117,7 +110,6 @@ const CallInterface = () => {
         
         setConversation(prev => [...prev, callerMessage]);
         
-        // Update session info
         setSessionInfo(prev => ({
           ...prev,
           emotional_state: response.emotional_state,
@@ -129,7 +121,6 @@ const CallInterface = () => {
       } catch (error) {
         console.error('Failed to send message:', error);
         
-        // Add error message to conversation
         const errorMessage = {
           role: 'system',
           content: 'Failed to get response from caller. Please try again.',
@@ -193,7 +184,7 @@ const CallInterface = () => {
         </button>
       </div>
 
-      {/* Session Info */}
+      {/* Session Info - Show emotional state here instead of in transcript */}
       {sessionInfo && (
         <div className="session-info">
           <span>Scenario: {sessionInfo.scenario_type}</span>
@@ -219,10 +210,8 @@ const CallInterface = () => {
                   {message.role === 'call_taker' ? 'Call Taker:' : 
                    message.role === 'system' ? 'System:' : 'Caller:'}
                 </span>
+                {/* Only show the message content, not the emotional state */}
                 <span className="content">{message.content}</span>
-                {message.emotional_state && (
-                  <span className="emotional-state">({message.emotional_state})</span>
-                )}
               </div>
             ))}
             
