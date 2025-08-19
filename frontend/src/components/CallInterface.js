@@ -17,12 +17,14 @@ const CallInterface = () => {
   
   const transcriptRef = useRef(null);
 
+  // Load session info and initial message on mount
   useEffect(() => {
     const loadSession = async () => {
       try {
         const sessionData = await getSession(sessionId);
         setSessionInfo(sessionData);
         
+        // Add initial caller message based on scenario
         const initialMessage = {
           role: 'caller',
           content: getInitialCallerMessage(sessionData.scenario_type),
@@ -43,6 +45,7 @@ const CallInterface = () => {
     }
   }, [sessionId, getSession, navigate]);
 
+  // Auto-scroll to bottom
   useLayoutEffect(() => {
     if (shouldAutoScroll && transcriptRef.current) {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
@@ -66,14 +69,17 @@ const CallInterface = () => {
         content: inputMessage.trim(),
         timestamp: new Date().toISOString()
       };
-
+      
+      // Add call taker message to conversation immediately
       setConversation(prev => [...prev, callTakerMessage]);
       setShouldAutoScroll(true);
       setInputMessage('');
 
       try {
+        // Send message to backend and get caller response
         const response = await sendMessage(sessionId, inputMessage.trim());
         
+        // Add caller response to conversation
         const callerMessage = {
           role: 'caller',
           content: response.caller_response,
@@ -86,6 +92,7 @@ const CallInterface = () => {
         setConversation(prev => [...prev, callerMessage]);
         setShouldAutoScroll(true);
         
+        // Update session info
         setSessionInfo(prev => ({
           ...prev,
           emotional_state: response.emotional_state,
@@ -165,6 +172,15 @@ const CallInterface = () => {
           New Call
         </button>
       </div>
+
+      {/* Session Info */}
+      {sessionInfo && (
+        <div className="session-info">
+          <span>Scenario: {sessionInfo.scenario_type}</span>
+          <span>Emotional State: {sessionInfo.emotional_state}</span>
+          <span>Progress: {Math.round((sessionInfo.scenario_progress || 0) * 100)}%</span>
+        </div>
+      )}
 
       <div className="transcript-container">
         <div className="transcript-display">
