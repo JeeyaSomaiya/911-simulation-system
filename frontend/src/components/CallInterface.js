@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '../services/useSession';
-import { useWebSocket } from '../services/useWebSocket';
 import './styles/call-interface.css';
 
 const CallInterface = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { terminateSession, getSession } = useSession();
-  const { transcript, isConnected, sendCallTakerMessage, error: wsError } = useWebSocket(sessionId);
+  const { terminateSession, getSession, sendMessage } = useSession();
   
   const [conversation, setConversation] = useState([]);
   const [sessionInfo, setSessionInfo] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   
   const transcriptRef = useRef(null);
 
@@ -44,13 +43,6 @@ const CallInterface = () => {
     }
   }, [sessionId, getSession, navigate]);
 
-  useEffect(() => {
-    if (transcript) {
-      setConversation(prev => [...prev, transcript]);
-      setShouldAutoScroll(true);
-    }
-  }, [transcript]);
-
   useLayoutEffect(() => {
     if (shouldAutoScroll && transcriptRef.current) {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
@@ -65,25 +57,60 @@ const CallInterface = () => {
     }
   };
 
-  const handleSendMessage = () => {
-    if (inputMessage.trim() && isConnected) {
-      const newMessage = {
+  const handleSendMessage = async () => {
+    if (inputMessage.trim() && !isSending) {
+      setIsSending(true);
+      
+      const callTakerMessage = {
         role: 'call_taker',
         content: inputMessage.trim(),
         timestamp: new Date().toISOString()
       };
       
-      setConversation(prev => [...prev, newMessage]);
+      setConversation(prev => [...prev, callTakerMessage]);
       setShouldAutoScroll(true);
-
-      sendCallTakerMessage(inputMessage.trim());
-      
       setInputMessage('');
+
+      try {
+        const response = await sendMessage(sessionId, inputMessage.trim());
+        
+        const callerMessage = {
+          role: 'caller',
+          content: response.caller_response,
+          emotional_state: response.emotional_state,
+          intensity: response.intensity,
+          scenario_progress: response.scenario_progress,
+          timestamp: new Date().toISOString()
+        };
+        
+        setConversation(prev => [...prev, callerMessage]);
+        setShouldAutoScroll(true);
+        
+        setSessionInfo(prev => ({
+          ...prev,
+          emotional_state: response.emotional_state,
+          intensity: response.intensity,
+          scenario_progress: response.scenario_progress,
+          key_details_revealed: response.key_details_revealed
+        }));
+        
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        
+        const errorMessage = {
+          role: 'system',
+          content: 'Failed to get response from caller. Please try again.',
+          timestamp: new Date().toISOString()
+        };
+        setConversation(prev => [...prev, errorMessage]);
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !isSending) {
       handleSendMessage();
     }
   };
@@ -91,11 +118,10 @@ const CallInterface = () => {
   const handleTerminate = async () => {
     try {
       await terminateSession(sessionId);
-      navigate('/');
     } catch (error) {
       console.error('Failed to terminate session:', error);
-      navigate('/');
     }
+    navigate('/');
   };
 
   const handleRetry = () => {
@@ -139,25 +165,19 @@ const CallInterface = () => {
         </button>
       </div>
 
-      {/* Connection Status */}
-      <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-        {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
-        {wsError && <span className="error-text"> - {wsError}</span>}
-      </div>
-
       {/* Session Info */}
       {sessionInfo && (
         <div className="session-info">
           <span>Scenario: {sessionInfo.scenario_type}</span>
           <span>Emotional State: {sessionInfo.emotional_state}</span>
-          <span>Progress: {Math.round(sessionInfo.scenario_progress * 100)}%</span>
+          <span>Progress: {Math.round((sessionInfo.scenario_progress || 0) * 100)}%</span>
         </div>
       )}
 
       <div className="transcript-container">
         <div className="transcript-display">
           <div className="transcript-header">
-            <h3>Live Transcript</h3>
+            <h3>Call Transcript</h3>
           </div>
           
           <div 
@@ -168,7 +188,8 @@ const CallInterface = () => {
             {conversation.map((message, index) => (
               <div key={index} className={`message ${message.role}`}>
                 <span className="role">
-                  {message.role === 'call_taker' ? 'Call Taker:' : 'Caller:'}
+                  {message.role === 'call_taker' ? 'Call Taker:' : 
+                   message.role === 'system' ? 'System:' : 'Caller:'}
                 </span>
                 <span className="content">{message.content}</span>
                 {message.emotional_state && (
@@ -176,6 +197,13 @@ const CallInterface = () => {
                 )}
               </div>
             ))}
+            
+            {isSending && (
+              <div className="message caller typing">
+                <span className="role">Caller:</span>
+                <span className="content typing-indicator">...</span>
+              </div>
+            )}
           </div>
         </div>
         
@@ -183,18 +211,18 @@ const CallInterface = () => {
           <input
             type="text"
             className="message-input"
-            placeholder={isConnected ? "Type your response..." : "Connecting..."}
+            placeholder={isSending ? "Waiting for response..." : "Type your response..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            disabled={!isConnected}
+            disabled={isSending}
           />
           <button 
             className="send-button"
             onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || !isConnected}
+            disabled={!inputMessage.trim() || isSending}
           >
-            Send
+            {isSending ? 'Sending...' : 'Send'}
           </button>
         </div>
       </div>

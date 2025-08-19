@@ -9,7 +9,11 @@ const CallWaiting = () => {
   const { terminateSession } = useSession();
 
   const handleTerminate = async () => {
-    await terminateSession(sessionId);
+    try {
+      await terminateSession(sessionId);
+    } catch (error) {
+      console.error('Failed to terminate session:', error);
+    }
     navigate('/');
   };
 
