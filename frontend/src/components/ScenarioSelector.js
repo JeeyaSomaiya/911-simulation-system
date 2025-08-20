@@ -91,7 +91,7 @@ const ScenarioSelector = () => {
       <div className="scenario-selector">
         <div className="scenario-card">
           <h2>Loading scenarios...</h2>
-          <p>Please wait while we load the available scenarios.</p>
+          <p>Please wait while the available scenarios load.</p>
         </div>
       </div>
     );

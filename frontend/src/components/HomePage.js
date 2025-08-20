@@ -128,7 +128,7 @@ const HomePage = () => {
                       
                       <div className="detail-item">
                         <span className="detail-label">Progress:</span>
-                        <span className="detail-value">{session.scenarioProgress || 0}%</span>
+                        <span className="detail-value">{session.scenarioProgress * 100 || 0}%</span>
                       </div>
                       
                       <div className="detail-item">

@@ -1,17 +1,17 @@
-// SessionHistory.js - Updated to use scenarios.json
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../services/authContext'; 
+import SessionTranscriptModal from './SessionTranscriptModal';
 import './styles/session-history.css';
 
 const SessionHistory = () => { 
   const { user, getUserSessions, deleteSession, getUserStats } = useAuth(); 
   const [sessions, setSessions] = useState([]);
-  const [scenarios, setScenarios] = useState([]); // Add scenarios state
+  const [scenarios, setScenarios] = useState([]);
   const [filterBy, setFilterBy] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [stats, setStats] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
 
-  // Load scenarios from JSON file
   useEffect(() => {
     const loadScenarios = async () => {
       try {
@@ -26,7 +26,6 @@ const SessionHistory = () => {
         }
       } catch (error) {
         console.error('Error loading scenarios:', error);
-        // Fallback to hardcoded scenarios if JSON fails
         setScenarios([]);
       }
     };
@@ -40,7 +39,16 @@ const SessionHistory = () => {
       setSessions(userSessions);
       setStats(getUserStats());
       console.log('User found:', user); 
-      console.log('Sessions loaded:', userSessions); 
+      console.log('Sessions loaded:', userSessions);
+
+      userSessions.forEach((session, index) => {
+        console.log(`Session ${index + 1}:`, {
+          id: session.sessionId,
+          scenario: session.scenarioType,
+          conversationLength: session.conversation?.length || 0,
+          conversationData: session.conversation
+        });
+      });
     }
   }, [user, getUserSessions, getUserStats]);
 
@@ -119,12 +127,12 @@ const SessionHistory = () => {
   };
 
   const handleViewSession = (session) => {
-    const scenario = scenarios.find(s => s.Code === session.scenarioType);
-    const scenarioDetails = scenario ? 
-      `${scenario.Code} - ${scenario.EventType}` : 
-      getScenarioDisplayName(session.scenarioType);
-    
-    alert(`Session Details:\n\nScenario: ${scenarioDetails}\nProgress: ${session.scenarioProgress}%\nDuration: ${session.endTime && session.startTime ? Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60)) : 'Unknown'} minutes\nMessages: ${session.conversation?.length || 0} exchanges`);
+    console.log('Opening session transcript for:', session);
+    setSelectedSession(session);
+  };
+
+  const closeModal = () => {
+    setSelectedSession(null);
   };
 
   console.log('Current user:', user);
@@ -206,7 +214,7 @@ const SessionHistory = () => {
               <div className="session-card-header">
                 <div className="session-info">
                   <h3 className="session-title">
-                    {getScenarioDisplayName(session.scenarioType)}
+                    {getScenarioDisplayName(session.scenarioType, session.selectedSubtype)}
                   </h3>
                   <p className="session-date">
                     {formatDate(session.startTime)}
@@ -245,7 +253,7 @@ const SessionHistory = () => {
                 <div className="metric">
                   <span className="metric-label">Progress</span>
                   <p className="metric-value">
-                    {session.scenarioProgress || 0}%
+                    {session.scenarioProgress * 100 || 0}%
                   </p>
                 </div>
                 
@@ -256,20 +264,18 @@ const SessionHistory = () => {
                   </p>
                 </div>
               </div>
-              
-              {session.conversation && session.conversation.length > 0 && (
-                <div className="last-exchange">
-                  <span className="last-exchange-label">Last Exchange</span>
-                  <p className="last-exchange-content">
-                    {session.conversation[session.conversation.length - 1]?.content || 'No messages'}
-                  </p>
-                </div>
-              )}
             </div>
           ))}
         </div>
       )}
-      
+
+      {selectedSession && (
+        <SessionTranscriptModal 
+          session={selectedSession}
+          scenarios={scenarios}
+          onClose={closeModal}
+        />
+      )}
     </div>
   );
 };
