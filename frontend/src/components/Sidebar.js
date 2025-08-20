@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../services/AuthContext';
+import { useAuth } from '../services/authContext';
 import './styles/sidebar.css';
 
 const Sidebar = () => {

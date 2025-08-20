@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext();
+const authContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(authContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
@@ -164,8 +164,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <authContext.Provider value={value}>
       {children}
-    </AuthContext.Provider>
+    </authContext.Provider>
   );
 };

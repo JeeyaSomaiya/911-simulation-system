@@ -1,6 +1,6 @@
 // SessionHistory.js - Updated to use scenarios.json
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../services/AuthContext'; 
+import { useAuth } from '../services/authContext'; 
 import './styles/session-history.css';
 
 const SessionHistory = () => { 

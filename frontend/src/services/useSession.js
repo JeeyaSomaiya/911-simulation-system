@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from './authContext';
 
 const API_BASE_URL = 'http://130.250.171.84:5000';
 

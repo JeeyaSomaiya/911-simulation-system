@@ -7,7 +7,7 @@ import ScenarioSelector from './components/ScenarioSelector';
 import CallWaiting from './components/CallWaiting';
 import CallInterface from './components/CallInterface';
 import SessionHistory from './components/SessionHistory';
-import { AuthProvider, useAuth } from './services/AuthContext';
+import { AuthProvider, useAuth } from './services/authContext';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
