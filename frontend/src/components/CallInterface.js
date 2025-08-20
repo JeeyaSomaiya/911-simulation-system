@@ -1,75 +1,256 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '../services/useSession';
-import { useWebSocket } from '../services/useWebSocket';
 import './styles/call-interface.css';
 
 const CallInterface = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { sendMessage, terminateSession } = useSession();
-  const { transcript, isConnected } = useWebSocket(sessionId);
-  const [conversation, setConversation] = useState([
-    { role: 'call_taker', content: "What's the address of the emergency?" },
-    { role: 'caller', content: "My address is 65 Eldorado CL NE" },
-    { role: 'call_taker', content: "What's the phone number you're calling from?" },
-    { role: 'caller', content: "403-441-7845" },
-    { role: 'call_taker', content: "What's your name?" },
-    { role: 'caller', content: "Harry Winston" },
-    { role: 'call_taker', content: "Ok, tell me exactly what happened." },
-    { role: 'caller', content: "I heard 2 gunshots across the street about 60 seconds ago. I saw the guy who lives at 68 Eldorado CL NE go into the house. He had a hand gun in his right hand. I heard yelling and screaming coming from that house earlier today" }
-  ]);
+  const { terminateSession, getSession, sendMessage, createSession } = useSession();
+  
+  const [conversation, setConversation] = useState([]);
+  const [sessionInfo, setSessionInfo] = useState(null);
+  const [inputMessage, setInputMessage] = useState('');
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
+  
+  const transcriptRef = useRef(null);
+  const isSendingRef = useRef(false);
+  const inputRef = useRef(null);
+  const hasLoadedSession = useRef(false);
 
+  // Load session info on mount - ONLY ONCE
   useEffect(() => {
-    if (transcript) {
-      setConversation(prev => [...prev, transcript]);
+    if (sessionId && !hasLoadedSession.current) {
+      hasLoadedSession.current = true;
+      
+      const loadSession = async () => {
+        try {
+          const sessionData = await getSession(sessionId);
+          setSessionInfo(sessionData);
+        } catch (error) {
+          console.error('Failed to load session:', error);
+          alert('Failed to load session. Returning to main menu.');
+          navigate('/');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadSession();
     }
-  }, [transcript]);
+  }, [sessionId, getSession, navigate]);
+
+  // Auto-scroll to bottom
+  useLayoutEffect(() => {
+    if (shouldAutoScroll && transcriptRef.current) {
+      transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
+    }
+  }, [conversation, shouldAutoScroll]);
+
+  const handleScroll = () => {
+    if (transcriptRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = transcriptRef.current;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+      setShouldAutoScroll(isAtBottom);
+    }
+  };
+
+  // Use useEffect to set up event listeners only once
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && !isSendingRef.current && inputRef.current === document.activeElement) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (inputMessage.trim() && !isSendingRef.current) {
+      isSendingRef.current = true;
+      setIsSending(true);
+      
+      const callTakerMessage = {
+        role: 'call_taker',
+        content: inputMessage.trim(),
+        timestamp: new Date().toISOString()
+      };
+      
+      setConversation(prev => [...prev, callTakerMessage]);
+      const messageToSend = inputMessage.trim();
+      setInputMessage('');
+
+      try {
+        const response = await sendMessage(sessionId, messageToSend);
+        
+        const callerMessage = {
+          role: 'caller',
+          content: response.caller_response,
+          emotional_state: response.emotional_state,
+          intensity: response.intensity,
+          scenario_progress: response.scenario_progress,
+          timestamp: new Date().toISOString()
+        };
+        
+        setConversation(prev => [...prev, callerMessage]);
+        
+        setSessionInfo(prev => ({
+          ...prev,
+          emotional_state: response.emotional_state,
+          intensity: response.intensity,
+          scenario_progress: response.scenario_progress,
+          key_details_revealed: response.key_details_revealed
+        }));
+        
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        
+        const errorMessage = {
+          role: 'system',
+          content: 'Failed to get response from caller. Please try again.',
+          timestamp: new Date().toISOString()
+        };
+        setConversation(prev => [...prev, errorMessage]);
+      } finally {
+        setIsSending(false);
+        isSendingRef.current = false;
+      }
+    }
+  };
 
   const handleTerminate = async () => {
-    await terminateSession(sessionId);
+    try {
+      await terminateSession(sessionId);
+    } catch (error) {
+      console.error('Failed to terminate session:', error);
+    }
     navigate('/');
   };
 
-  const handleRetry = () => {
-    navigate('/new-call');
+  const handleRetry = async () => {
+    setIsRestarting(true);
+    try {
+      // Get trainee_id from localStorage or use a default
+      const traineeId = localStorage.getItem('trainee_id') || 'default-trainee-id';
+      
+      // Create a new session with the same scenario type
+      if (sessionInfo && sessionInfo.scenario_type) {
+        const newSession = await createSession({
+          trainee_id: traineeId,
+          scenario_type: sessionInfo.scenario_type
+        });
+        
+        // Navigate to the new session
+        navigate(`/call/${newSession.session_id}`);
+        window.location.reload(); // Force reload to reset the component completely
+      }
+    } catch (error) {
+      console.error('Failed to restart session:', error);
+      alert('Failed to restart the call. Please try again.');
+    } finally {
+      setIsRestarting(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="call-interface">
+        <div className="loading-container">
+          <h3>Loading call session...</h3>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="call-interface">
       <div className="call-controls-top">
-        <button className="btn-secondary" onClick={handleTerminate}>
+        <button className="terminate-btn" onClick={handleTerminate}>
           Terminate Session
         </button>
-        <button className="btn-secondary" onClick={handleRetry}>
-          🔄 Retry Call
+        <button 
+          className="retry-btn" 
+          onClick={handleRetry}
+          disabled={isRestarting}
+        >
+          <img src="/images/retry.png" alt="retry" className="retry-icon"/>
+          {isRestarting ? 'Restarting...' : 'Retry Call'}
         </button>
       </div>
 
       <div className="transcript-container">
         <div className="transcript-display">
           <div className="transcript-header">
-            <h3>Live Transcript</h3>
-            {isConnected && <span className="live-indicator">🔴 LIVE</span>}
+            <h3>Call Transcript</h3>
           </div>
           
-          <div className="transcript-content">
-            {conversation.map((message, index) => (
-              <div key={index} className={`message ${message.role}`}>
-                <span className="role">
-                  {message.role === 'call_taker' ? 'Call Taker:' : 'Caller:'}
-                </span>
-                <span className="content">{message.content}</span>
+          <div 
+            className="transcript-content"
+            ref={transcriptRef}
+            onScroll={handleScroll}
+          >
+            {conversation.length === 0 ? (
+              <div className="message system">
+                <span className="role">System:</span>
+                <span className="content">Type a message to start the conversation...</span>
               </div>
-            ))}
+            ) : (
+              conversation.map((message, index) => (
+                <div key={index} className={`message ${message.role}`}>
+                  <span className="role">
+                    {message.role === 'call_taker' ? 'Call Taker:' : 
+                     message.role === 'system' ? 'System:' : 'Caller:'}
+                  </span>
+                  <span className="content">{message.content}</span>
+                </div>
+              ))
+            )}
+            
+            {isSending && (
+              <div className="message caller typing">
+                <span className="role">Caller:</span>
+                <span className="content typing-indicator">...</span>
+              </div>
+            )}
           </div>
+        </div>
+        
+        <div className="message-input-container">
+          <input
+            ref={inputRef}
+            type="text"
+            className="message-input"
+            placeholder={isSending ? "Waiting for response..." : "Type your response ..."}
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            disabled={isSending || isRestarting}
+          />
+          <button 
+            className="send-button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+            disabled={!inputMessage.trim() || isSending || isRestarting}
+          >
+            {isSending ? 'Sending...' : 'Send'}
+          </button>
         </div>
       </div>
 
       <div className="call-controls-bottom">
         <button className="hang-up-button" onClick={handleTerminate}>
           <div className="call-icon red">
-            <span className="phone-symbol">📞</span>
+            <img src="/images/phone.png" alt="phone" className="hangup-icon"/>
           </div>
         </button>
       </div>

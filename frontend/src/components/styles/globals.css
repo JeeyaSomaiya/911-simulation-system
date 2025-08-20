@@ -16,14 +16,12 @@ body {
 }
 
 html {
-  background-color: #1a1a1a;
+  background-color: #000000;
 }
 
 :root {
-  --primary-bg: #1a1a1a;
-  --secondary-bg: #2a2a2a;
-  --card-bg: #1e1e1e;
-  --accent-blue: #4285f4;
+  --primary-bg: #000000;
+  --accent-blue: #497CFF;
   --accent-green: #4caf50;
   --accent-red: #f44336;
   --text-primary: #ffffff;
@@ -74,7 +72,7 @@ html {
 }
 
 .card {
-  background-color: var(--card-bg);
+  background-color: var(--primary-bg);
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--border-color);

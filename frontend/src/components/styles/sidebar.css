@@ -1,6 +1,6 @@
 .sidebar {
   width: 260px;
-  background-color: var(--secondary-bg);
+  background-color: var(--primary-bg);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -82,4 +82,10 @@
 .call-time {
   font-size: 11px;
   color: var(--text-secondary);
+}
+
+.home-icon,
+.plus-icon {
+  width: 25px;
+  height: 25px;
 }

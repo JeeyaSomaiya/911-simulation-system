@@ -6,17 +6,15 @@ import './styles/scenario-selector.css';
 
 const ScenarioSelector = () => {
   const navigate = useNavigate();
-  const { createSession } = useSession();
+  const { createSession, isLoading: sessionLoading, error: sessionError } = useSession();
   const [scenarios, setScenarios] = useState([]);
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [realtimeTranscription, setRealtimeTranscription] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    // Load scenarios from the real JSON structure
     const loadScenarios = async () => {
       try {
         const response = await fetch('/scenarios.json');
@@ -25,10 +23,8 @@ const ScenarioSelector = () => {
         }
         const data = await response.json();
         
-        // Validate that data is an array
         if (Array.isArray(data) && data.length > 0) {
           setScenarios(data);
-          setSelectedScenario(data[0]);
         } else {
           throw new Error('No scenarios found in JSON file');
         }
@@ -40,7 +36,6 @@ const ScenarioSelector = () => {
 
     loadScenarios();
 
-    // Update time every second
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -54,22 +49,27 @@ const ScenarioSelector = () => {
       return;
     }
     
-    setIsLoading(true);
     try {
-      const session = await createSession({
+      const sessionData = await createSession({
         trainee_id: 'user_' + Date.now(),
         scenario_type: selectedScenario.Code
       });
       
-      navigate(`/call-waiting/${session.session_id}`);
+      console.log('Session created:', sessionData);
+      
+      navigate(`/call-waiting/${sessionData.session_id}`);
     } catch (error) {
       console.error('Failed to create session:', error);
-      alert('Failed to create session. Please try again.');
-      setIsLoading(false);
+      alert(`Failed to create session: ${error.message}`);
     }
   };
 
-  // Show loading state while scenarios are being loaded
+  useEffect(() => {
+    if (sessionError) {
+      alert(`Session error: ${sessionError}`);
+    }
+  }, [sessionError]);
+
   if (scenarios.length === 0 && !loadError) {
     return (
       <div className="scenario-selector">
@@ -81,7 +81,6 @@ const ScenarioSelector = () => {
     );
   }
 
-  // Show error state if scenarios failed to load
   if (loadError) {
     return (
       <div className="scenario-selector">
@@ -107,36 +106,43 @@ const ScenarioSelector = () => {
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               <span>
-                {selectedScenario ? `${selectedScenario.Code} ${selectedScenario.EventType}` : 'Select scenario'}
+                {selectedScenario 
+                  ? `${selectedScenario.Code} ${selectedScenario.EventType} ${selectedScenario.selectedSubtype ? ` - ${selectedScenario.selectedSubtype}` : ''}` 
+                  : 'Select scenario'}
               </span>
               <span className={`dropdown-arrow ${dropdownOpen ? 'open' : ''}`}>▼</span>
             </div>
             
             {dropdownOpen && (
               <div className="dropdown-menu">
-                {scenarios.map((scenario, index) => (
-                  <div
-                    key={`${scenario.Code}-${index}`}
-                    className="dropdown-item"
-                    onClick={() => {
-                      setSelectedScenario(scenario);
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    {scenario.Code} {scenario.EventType}
-                  </div>
-                ))}
+                {scenarios.flatMap((scenario, scenarioIndex) => 
+                  scenario.EventSubtypes.map((subtype, subtypeIndex) => (
+                    <div
+                      key={`${scenario.Code}-${scenarioIndex}-${subtypeIndex}`}
+                      className="dropdown-item"
+                      onClick={() => {
+                        setSelectedScenario({
+                          ...scenario,
+                          selectedSubtype: subtype
+                        });
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      {scenario.Code} - {scenario.EventType} - {subtype}
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
           
           <div className="location-time-display">
             <div className="location">
-              <span className="icon">📍</span>
+              <img src="/images/location.png" alt="location" className="location-icon" /> 
               <span>Calgary, Alberta</span>
             </div>
             <div className="time">
-              <span className="icon">🕐</span>
+              <img src="/images/clock.png" alt="clock" className="time-icon" /> 
               <span>{format(currentTime, 'h:mm a')}</span>
             </div>
           </div>
@@ -157,19 +163,16 @@ const ScenarioSelector = () => {
         <button 
           className="simulate-call-btn"
           onClick={handleSimulateCall}
-          disabled={!selectedScenario || isLoading}
+          disabled={!selectedScenario || sessionLoading}
         >
-          <span className="phone-icon">📞</span>
-          {isLoading ? 'Creating...' : 'Simulate Call'}
+          <img src="/images/phone.png" alt="phone" className="phone-icon"/> 
+          {sessionLoading ? 'Creating...' : 'Simulate Call'}
         </button>
         
         {selectedScenario && (
           <div className="selected-scenario-info">
             <small>
-              Selected: {selectedScenario.Code} - {selectedScenario.EventType}
-              {selectedScenario.EventSubtypes && selectedScenario.EventSubtypes.length > 0 && (
-                <span> ({selectedScenario.EventSubtypes.join(', ')})</span>
-              )}
+              Selected: {selectedScenario.Code} - {selectedScenario.EventType} - {selectedScenario.selectedSubtype || ''}
             </small>
           </div>
         )}

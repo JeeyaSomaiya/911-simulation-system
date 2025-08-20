@@ -1,7 +1,5 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { SessionProvider } from './context/SessionContext';
-import { WebSocketProvider } from './context/WebSocketContext';
 import Layout from './components/Layout';
 import HomePage from './components/HomePage';
 import ScenarioSelector from './components/ScenarioSelector';
@@ -10,8 +8,6 @@ import CallInterface from './components/CallInterface';
 
 function App() {
   return (
-    <SessionProvider>
-      <WebSocketProvider>
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -20,8 +16,6 @@ function App() {
             <Route path="/call/:sessionId" element={<CallInterface />} />
           </Routes>
         </Layout>
-      </WebSocketProvider>
-    </SessionProvider>
   );
 }
 

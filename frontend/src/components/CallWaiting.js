@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '../services/useSession';
 import './styles/call-waiting.css';
@@ -8,38 +8,36 @@ const CallWaiting = () => {
   const navigate = useNavigate();
   const { terminateSession } = useSession();
 
-  useEffect(() => {
-    // Simulate call pickup after 3 seconds
-    const timer = setTimeout(() => {
-      navigate(`/call/${sessionId}`);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [sessionId, navigate]);
-
   const handleTerminate = async () => {
-    await terminateSession(sessionId);
+    try {
+      await terminateSession(sessionId);
+    } catch (error) {
+      console.error('Failed to terminate session:', error);
+    }
     navigate('/');
   };
 
-  const handleRetry = () => {
-    navigate('/new-call');
+  const handlePickup = () => {
+    navigate(`/call/${sessionId}`);
   };
 
   return (
     <div className="call-waiting">
-      <div className="call-controls-top">
-        <button className="btn-secondary" onClick={handleTerminate}>
-          Terminate Session
-        </button>
-        <button className="btn-secondary" onClick={handleRetry}>
-          🔄 Retry Call
-        </button>
-      </div>
+      <div className="call-waiting-card">
+        <div className="call-controls-top">
+          <button className="terminate-btn" onClick={handleTerminate}>
+            Terminate Session
+          </button>
+          <button className="retry-btn" disabled={true}>
+            <img src="/images/retry.png" alt="retry" className="retry-icon"/>
+            Retry Call
+          </button>
+        </div>
 
-      <div className="call-icon-container">
-        <div className="call-icon green active">
-          <span className="phone-symbol">📞</span>
+        <div className="call-icon-container">
+          <button className="call-icon green active pickup-button" onClick={handlePickup}>
+            <img src="/images/phone.png" alt="phone" className="pickup-icon"/>
+          </button>
         </div>
       </div>
     </div>

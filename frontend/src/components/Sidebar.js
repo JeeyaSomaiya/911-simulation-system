@@ -8,7 +8,6 @@ const Sidebar = () => {
   const [callHistory, setCallHistory] = useState([]);
 
   useEffect(() => {
-    // Load mock call history
     const mockHistory = [
       { id: 1, type: '10-02 Accident - Non ...', time: '2 hours ago' },
       { id: 2, type: '10-04 Alarm - ATM, C ...', time: '4 hours ago' },
@@ -24,14 +23,14 @@ const Sidebar = () => {
           className={`nav-item ${location.pathname === '/' ? 'active' : ''}`}
           onClick={() => navigate('/')}
         >
-          <span className="nav-icon">🏠</span>
+          <img src="/images/home.png" alt="home" className="home-icon"/> 
           <span className="nav-label">Home</span>
         </div>
         <div 
           className={`nav-item ${location.pathname === '/new-call' ? 'active' : ''}`}
           onClick={() => navigate('/new-call')}
         >
-          <span className="nav-icon">➕</span>
+          <img src="/images/plus.png" alt="plus" className="plus-icon"/> 
           <span className="nav-label">New Call</span>
         </div>
       </nav>
