@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useSession } from '../services/useSession';
@@ -13,6 +13,21 @@ const ScenarioSelector = () => {
   const [realtimeTranscription, setRealtimeTranscription] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const loadScenarios = async () => {
@@ -100,7 +115,7 @@ const ScenarioSelector = () => {
         <p>Select a scenario to simulate</p>
 
         <div className="form-section">
-          <div className="dropdown-container">
+          <div className="dropdown-container" ref={dropdownRef}>
             <div 
               className="dropdown-trigger"
               onClick={() => setDropdownOpen(!dropdownOpen)}
