@@ -67,7 +67,8 @@ const ScenarioSelector = () => {
     try {
       const sessionData = await createSession({
         trainee_id: 'user_' + Date.now(),
-        scenario_type: selectedScenario.Code
+        scenario_type: selectedScenario.Code,
+        selected_subtype: selectedScenario.selectedSubtype
       });
       
       console.log('Session created:', sessionData);

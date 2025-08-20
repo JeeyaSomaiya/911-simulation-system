@@ -17,14 +17,14 @@
         "Code": "10-03",
         "EPD": "",
         "EventType": "Miscellaneous",
-        "EventSubtypes": ["Other Industrial accident"],
+        "EventSubtypes": ["Other Industrial Accident"],
         "WeaponAvailable": false
     },
     {
         "Code": "10-04",
         "EPD": "104",
         "EventType": "Alarm",
-        "EventSubtypes": ["ATM", "Commercial", "Res", "Hold Up", "other"],
+        "EventSubtypes": ["ATM", "Commercial", "Residential", "Hold Up", "Other"],
         "WeaponAvailable": false
     },
     {
@@ -45,14 +45,7 @@
         "Code": "10-06",
         "EPD": "",
         "EventType": "Assistance",
-        "EventSubtypes": ["Assist CFD/FMS/Other/Police"],
-        "WeaponAvailable": false
-    },
-    {
-        "Code": "10-06",
-        "EPD": "",
-        "EventType": "Assistance",
-        "EventSubtypes": ["Other Police Agency/Peace"],
+        "EventSubtypes": ["Assist CFD/FMS/Other/Police", "Other Police Agency/Peace"],
         "WeaponAvailable": false
     },
     {
@@ -80,14 +73,14 @@
         "Code": "10-09",
         "EPD": "110",
         "EventType": "Break & Enter",
-        "EventSubtypes": ["Home Invasion"],
+        "EventSubtypes": ["Shop"],
         "WeaponAvailable": true
     },
     {
         "Code": "10-10",
         "EPD": "105",
         "EventType": "Miscellaneous",
-        "EventSubtypes": ["Animal complaint"],
+        "EventSubtypes": ["Animal Complaint"],
         "WeaponAvailable": false
     },
     {
@@ -332,7 +325,7 @@
         "Code": "10-43",
         "EPD": "102",
         "EventType": "Check on Welfare",
-        "EventSubtypes": ["Abuse", "Neglect", "Abandonment"],
+        "EventSubtypes": ["For Abuse, Neglect, Abandonment"],
         "WeaponAvailable": false
     },
     {
@@ -346,28 +339,14 @@
         "Code": "10-43",
         "EPD": "100-E-1",
         "EventType": "Check on Welfare",
-        "EventSubtypes": ["Caller in Imminent Danger"],
-        "WeaponAvailable": false
-    },
-    {
-        "Code": "10-43",
-        "EPD": "134",
-        "EventType": "Check on Welfare",
-        "EventSubtypes": ["For Unknown Third Party Events"],
+        "EventSubtypes": ["Caller in Imminent Danger for Unknown Third Party Events"],
         "WeaponAvailable": false
     },
     {
         "Code": "10-44",
         "EPD": "101",
         "EventType": "Abduction",
-        "EventSubtypes": ["Abduction"],
-        "WeaponAvailable": true
-    },
-    {
-        "Code": "10-44",
-        "EPD": "101",
-        "EventType": "Abduction",
-        "EventSubtypes": ["Abduction - Parental Family"],
+        "EventSubtypes": ["Abduction", "Abduction - Parental Family"],
         "WeaponAvailable": true
     },
     {
@@ -458,7 +437,7 @@
         "Code": "10-86",
         "EPD": "130",
         "EventType": "Theft",
-        "EventSubtypes": ["Stolen Auto - In progress/Late reporting"],
+        "EventSubtypes": ["Stolen Auto - In Progress/Late Reporting"],
         "WeaponAvailable": false
     },
     {
@@ -479,7 +458,7 @@
         "Code": "10-88",
         "EPD": "132",
         "EventType": "Traffic",
-        "EventSubtypes": ["Traffic Complaint Misc"],
+        "EventSubtypes": ["Traffic Complaint Miscellaneous"],
         "WeaponAvailable": true
     },
     {
@@ -528,7 +507,7 @@
         "Code": "200",
         "EPD": "124-E-1",
         "EventType": "Major Code",
-        "EventSubtypes": ["Code 200 (Officer in Trouble)"],
+        "EventSubtypes": ["Officer in Trouble"],
         "WeaponAvailable": true
     },
     {
