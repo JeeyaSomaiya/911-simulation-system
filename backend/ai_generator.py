@@ -87,18 +87,18 @@ class HuggingFaceCallerGenerator:
             with self.lock:
                 outputs = self.pipeline(
                     messages,
-                    max_new_tokens=120,
+                    max_new_tokens=100,
                     do_sample=True,
-                    temperature=0.85,
-                    top_p=0.95,
+                    temperature=0.7,
+                    top_p=0.9,
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
-                    repetition_penalty=1.05,
+                    repetition_penalty=1.2,
                 )
                 
                 response = outputs[0]['generated_text'][len(messages):].strip()
             
-            response = self._clean_response(response, call_taker_message, caller_state.emotional_state)
+            response = self._clean_response(response, call_taker_message, caller_state.emotional_state, caller_state)
             new_state = self._update_state(caller_state, call_taker_message, response)
             
             return response, new_state
@@ -125,8 +125,8 @@ class HuggingFaceCallerGenerator:
         current_question_instruction = f"""
 IMPORTANT: The 911 operator just asked: "{call_taker_message}"
 {emotional_context}
-Answer this question naturally and completely based on what you can see.
-Speak like a real person in this situation - use casual language, contractions, and natural phrasing.
+Answer this question clearly and concisely based on what you can see.
+Focus on providing a complete, coherent response that directly addresses the question.
 """
         
         messages.append({"role": "user", "content": current_question_instruction})
@@ -141,13 +141,13 @@ Speak like a real person in this situation - use casual language, contractions, 
     
     def _get_emotional_context(self, emotional_state: EmotionalState) -> str:
         emotional_contexts = {
-            EmotionalState.CALM: "You're relatively calm but concerned.",
-            EmotionalState.WORRIED: "You're worried and your voice might show some tension.",
-            EmotionalState.PANICKED: "You're panicked - speak quickly, with urgency, but stay coherent.",
-            EmotionalState.HYSTERICAL: "You're extremely upset - your speech might be fragmented, breathless, or repetitive.",
-            EmotionalState.RELIEVED: "You're starting to calm down as help arrives."
+            EmotionalState.CALM: "You're relatively calm but concerned. Speak clearly and coherently.",
+            EmotionalState.WORRIED: "You're worried but trying to stay focused. Your voice might show some tension but you're still coherent.",
+            EmotionalState.PANICKED: "You're panicked but still able to communicate clearly. Speak with urgency but maintain complete sentences.",
+            EmotionalState.HYSTERICAL: "You're extremely upset but still trying to communicate effectively. Your speech might be rushed but should still be understandable.",
+            EmotionalState.RELIEVED: "You're starting to calm down as help arrives. Speak clearly and provide complete information."
         }
-        return emotional_contexts.get(emotional_state, "You're concerned about what you're seeing.")
+        return emotional_contexts.get(emotional_state, "You're concerned but trying to communicate clearly.")
     
     def _create_system_prompt(self, caller_state: CallerState, context: dict) -> str:
         initial_question_response = self._get_initial_question_response(context, caller_state)
@@ -173,30 +173,34 @@ Current emotional state: {caller_state.emotional_state.value}
 SCENARIO-SPECIFIC DETAILS:
 {scenario_details}
 
-CRITICAL RESPONSE GUIDELINES - SPEAK LIKE A REAL PERSON:
-1. Use NATURAL, CONVERSATIONAL language - not formal or robotic
-2. Use contractions: "I'm", "don't", "can't", "it's", "there's"
-3. Answer questions directly but naturally - don't sound like you're reciting a report
+CRITICAL RESPONSE GUIDELINES:
+1. Speak in COMPLETE, COHERENT sentences - no trailing off or fragmented thoughts
+2. Use natural but clear language - avoid excessive exclamation marks or emotional outbursts
+3. Answer questions directly and completely
 4. If you don't know something, say "I'm not sure" or "I can't really tell from here"
-5. Keep responses to 1-2 sentences that flow naturally
+5. Keep responses focused and to the point - 1-2 clear sentences
 6. NEVER describe your physical state or emotions directly
-7. Show emotion through your WORD CHOICE and SPEECH PATTERNS, not descriptions
-8. Use phrases real people use: "looks like", "seems like", "I think", "maybe", "kinda"
-9. If repeating information, say it slightly differently each time
-10. Stay in character as {context['caller_name']} - a regular person witnessing an emergency
+7. Show appropriate concern through your word choice, not through excessive punctuation
+8. Use normal conversational patterns: "looks like", "seems like", "I think"
+9. Stay in character as {context['caller_name']} - a concerned but coherent witness
+
+IMPORTANT: MAINTAIN CLEAR COMMUNICATION
+- Always speak in complete sentences
+- Avoid trailing off mid-thought (...)
+- Use exclamation marks sparingly and appropriately
+- Don't repeat yourself unnecessarily
+- Provide information in a logical, organized way
+
+CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
+- For the first response, ONLY state the emergency and basic location
+- Wait for the operator to ask questions before providing details
+- Only answer the specific question asked
 
 NATURAL SPEECH EXAMPLES:
-- Say "car" not "vehicle", "truck" not "commercial vehicle"
-- Say "hit" not "collided", "rear-ended" not "rear-impact collision"
-- Say "okay" not "uninjured", "hurt" not "injured"
-- Say "bleeding" not "hemorrhaging", "broken" not "fractured"
-- Use filler words naturally: "um", "like", "you know" - but sparingly
-
-QUESTION-ANSWERING:
-- Answer directly but conversationally
-- Add relevant details naturally, not like a checklist
-- If unsure, say so but give your best guess
-- Speak like you're talking to a friend, not writing a report
+- "There's been a car accident at Deerfoot and Cranston!"
+- "I just saw a white SUV roll over into the ditch."
+- "I'm not sure if anyone's hurt yet."
+- "It looks like there might be black ice on the road."
 
 SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_question_response}"""
 
@@ -206,31 +210,31 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
         
         if 'accident' in scenario_type_lower or 'crash' in scenario_type_lower or 'collision' in scenario_type_lower:
             return """ACCIDENT-SPECIFIC DETAILS:
-- Note vehicle types, colors, what happened naturally
-- Observe injuries, trapped people, hazards - describe what you see
-- Notice fluid leaks, airbags, damage - mention it conversationally
-- Count people involved, their conditions - approximate numbers are fine
-- Identify immediate dangers - mention them naturally in conversation
-- Note vehicle positions and damage - describe what it looks like
-- Observe road conditions - mention if it's icy, wet, etc."""
+- Note vehicle types, colors, what happened
+- Observe injuries, trapped people, hazards
+- Notice fluid leaks, airbags, damage
+- Count people involved, their conditions
+- Identify immediate dangers
+- Note vehicle positions and damage
+- Observe road conditions"""
         
         elif 'fire' in scenario_type_lower:
             return """FIRE-SPECIFIC DETAILS:
-- Note size, location, spread of fire - describe what you see
-- Observe smoke color and direction - mention it naturally
+- Note size, location, spread of fire
+- Observe smoke color and direction
 - Identify potential victims or trapped people
-- Notice hazards - mention them as you would naturally
+- Notice hazards
 - Check for evacuation status
-- Note building type and what's happening"""
+- Note building type"""
         
         elif 'medical' in scenario_type_lower or 'injury' in scenario_type_lower:
             return """MEDICAL-SPECIFIC DETAILS:
-- Note if people are awake or passed out
+- Note if people are awake or unconscious
 - Observe breathing problems
 - Identify visible injuries, bleeding
 - Note approximate age and condition
 - Check for medical alerts
-- Observe if people can respond"""
+- Observe responsiveness"""
         
         elif 'crime' in scenario_type_lower or 'robbery' in scenario_type_lower or 'assault' in scenario_type_lower:
             return """CRIME-SPECIFIC DETAILS:
@@ -241,45 +245,48 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
 - Note any distinctive features
 - Observe where they went"""
         
-        return "Describe what you're seeing naturally, like you would to a friend."
+        return "Describe what you're seeing clearly and concisely."
 
     def _get_initial_question_response(self, context: dict, caller_state: CallerState) -> str:
         scenario_type = context.get('scenario_type', '')
         
         if 'accident' in scenario_type.lower():
             natural_responses = [
-                "There's been a bad accident!",
-                "Oh my god, I just saw a terrible crash!",
-                "Help! There's been a car wreck!",
-                "I just witnessed a really bad accident!",
-                "There's a serious accident here!"
+                "There's been a car accident at {location}!",
+                "Car crash at {location}!",
+                "There's a wreck at {location}!",
+                "Accident at {location}!",
+                "Car accident at {location}!"
             ]
-            return random.choice(natural_responses)
+            response = random.choice(natural_responses)
+            return response.format(location=context['location'])
         
         elif 'fire' in scenario_type.lower():
             natural_responses = [
-                "There's a building on fire!",
-                "Fire! I can see flames and smoke!",
-                "There's a huge fire here!",
-                "A building's burning down!",
-                "Fire emergency!"
+                "There's a fire at {location}!",
+                "Building on fire at {location}!",
+                "Fire emergency at {location}!",
+                "Fire at {location}!",
+                "Structure fire at {location}!"
             ]
-            return random.choice(natural_responses)
+            response = random.choice(natural_responses)
+            return response.format(location=context['location'])
         
         elif 'medical' in scenario_type.lower():
             natural_responses = [
-                "Someone's really hurt here!",
-                "There's a medical emergency!",
-                "I need an ambulance right now!",
-                "Someone's badly injured!",
-                "Help! Medical emergency!"
+                "Medical emergency at {location}!",
+                "Someone needs help at {location}!",
+                "Medical situation at {location}!",
+                "Health emergency at {location}!",
+                "Injury at {location}!"
             ]
-            return random.choice(natural_responses)
+            response = random.choice(natural_responses)
+            return response.format(location=context['location'])
         
-        return context.get('initial_response', "I need help!")
+        return context.get('initial_response', "Emergency at {location}!").format(location=context['location'])
 
-    def _clean_response(self, response: str, question: str = "", emotional_state: EmotionalState = None) -> str:
-        artifacts = ["<|eot_id|>", "<|end_of_text|>", "<|start_header_id|>", "<|end_header_id|>", "*", "**", "`"]
+    def _clean_response(self, response: str, question: str = "", emotional_state: EmotionalState = None, caller_state: CallerState = None) -> str:
+        artifacts = ["<|eot_id|>", "<|end_of_text|>", "<|start_header_id|>", "<|end_header_id|>", "*", "**", "`", "\"\"\""]
         for artifact in artifacts:
             response = response.replace(artifact, "")
         
@@ -294,44 +301,79 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
         if lines:
             response = lines[0]
         
-        if response.endswith('. .') or response.endswith('..'):
-            response = response.rstrip('. ')
+        response = re.sub(r'^"+|"+$', '', response)
+        
+        response = self._fix_punctuation_and_trailing_off(response)
         
         if len(response.split()) < 3 or not response.strip():
-            response = "I can see it from here, let me tell you what's happening."
-        
-        response = response.replace('. .', '.').replace('..', '.')
+            response = "I can see what's happening from here."
         
         response = re.sub(r'\(.*?\)', '', response)
         response = re.sub(r'\[.*?\]', '', response)
-        
-        forbidden_phrases = [
-            "breathing quickly", "taking deep breaths", "shaking", 
-            "crying", "sobbing", "hyperventilating", "pacing", 
-            "holding my chest", "clutching my heart", "panicking",
-            "freaking out", "nervous", "scared", "terrified", "frightened",
-            "I'm crying", "I'm shaking", "I can't breathe", "I'm hyperventilating",
-            "my heart is racing", "I'm panicking", "I'm scared", "I'm terrified",
-            "I'm nervous", "I'm freaking out", "I'm so scared", "I'm really scared",
-            "voice shaking", "hands shaking", "trembling", "I'm trembling",
-            "sweating", "heart pounding", "feeling dizzy", "lightheaded"
-        ]
-        
-        for phrase in forbidden_phrases:
-            response = response.replace(phrase, "")
-        
-        emotional_words = ["nervously", "anxiously", "frantically", "desperately", "urgently", "hysterically"]
-        for word in emotional_words:
-            response = response.replace(word, "")
         
         response = self._remove_emotional_indicators(response)
         
         response = self._naturalize_language(response, emotional_state)
         
+        if caller_state and len(caller_state.conversation_history) == 0:
+            response = self._limit_first_response(response, question)
+        
         if question and not self._validate_response_addresses_question(question, response):
             response = self._generate_direct_response(question, response, emotional_state)
         
         return response.strip()
+    
+    def _fix_punctuation_and_trailing_off(self, response: str) -> str:
+        response = re.sub(r'\.\.\.+', '.', response)
+        response = re.sub(r'\.\s*\.', '.', response)
+        response = re.sub(r'\.\s+$', '.', response)
+        
+        response = re.sub(r'!+', '!', response)
+        response = re.sub(r'!\s*!', '!', response)
+        
+        response = re.sub(r'[!?]\.', '!', response)
+        response = re.sub(r'\.!', '!', response)
+        
+        if not response.endswith(('.', '!', '?')):
+            sentences = re.split(r'[.!?]', response)
+            if sentences and sentences[-1].strip():
+                response = response + '.'
+            else:
+                response = response.rstrip() + '.'
+        
+        response = re.sub(r',\s*\.\.\.', ',', response)
+        response = re.sub(r'\s+\.\.\.', '.', response)
+        
+        response = re.sub(r'([.!?])\1+', r'\1', response)
+        
+        return response
+    
+    def _limit_first_response(self, response: str, question: str) -> str:
+        if "911, what is your emergency" in question.lower() or "what is your emergency" in question.lower():
+            response_words = response.split()
+            if len(response_words) > 12:
+                for i in range(min(10, len(response_words)), len(response_words)):
+                    if response_words[i].endswith(('.', '!', '?')):
+                        response = ' '.join(response_words[:i+1])
+                        break
+                else:
+                    response = ' '.join(response_words[:12]) + '...'
+            
+            detailed_phrases = [
+                'looks like', 'seems like', 'appears to be', 'i think', 'i believe',
+                'one car', 'another car', 'both cars', 'vehicles', 'accident type',
+                'injured', 'hurt', 'damage', 'wrecked', 'rolled over', 'flipped',
+                'black ice', 'cause', 'reason', 'because'
+            ]
+            
+            for phrase in detailed_phrases:
+                if phrase in response.lower():
+                    first_sentence = response.split('.')[0] + '.'
+                    if len(first_sentence.split()) >= 4:
+                        response = first_sentence
+                    break
+        
+        return response
     
     def _remove_emotional_indicators(self, response: str) -> str:
         words = response.split()
@@ -358,8 +400,8 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
             r'\bvehicle\b': 'car',
             r'\bvehicles\b': 'cars',
             r'\bautomobile\b': 'car',
-            r'\bnon-injury accident\b': 'accident where no one seems hurt',
-            r'\bnon-injury collision\b': 'crash where everyone seems okay',
+            r'\bnon-injury accident\b': 'accident',
+            r'\bnon-injury collision\b': 'crash',
             r'\bmotor vehicle collision\b': 'car accident',
             r'\bappear to be\b': 'seem to be',
             r'\bappears to be\b': 'seems to be',
@@ -382,7 +424,6 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
             r'\brequire\b': 'need',
             r'\butilize\b': 'use',
             r'\bapproximately\b': 'about',
-            r'\bapproximately\b': 'around',
             r'\bassistance\b': 'help',
             r'\brespond\b': 'come',
             r'\bunit\b': 'car',
@@ -428,12 +469,9 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
     
     def _add_emotional_urgency(self, response: str) -> str:
         urgent_patterns = [
-            (r'\.', '!'),
-            (r'is', "is just"),
-            (r'was', "was totally"),
-            (r'There\'s', "Oh god, there's"),
-            (r'I see', "I can see"),
-            (r'It looks', "It seriously looks")
+            (r'\.(?!\w)', '!'),
+            (r'There\'s', "There's just"),
+            (r'It looks', "It really looks")
         ]
         
         for pattern, replacement in urgent_patterns:
@@ -442,11 +480,10 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
         urgent_prefixes = [
             "Oh my god, ",
             "Seriously, ",
-            "I can't believe it, ",
-            "It's crazy, "
+            "I can't believe it, "
         ]
         
-        if random.random() < 0.3:
+        if random.random() < 0.2:
             response = random.choice(urgent_prefixes) + response.lower()
         
         return response
@@ -490,7 +527,7 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
             if 'not' in original_response.lower() or 'no ' in original_response.lower() or "don't" in original_response.lower():
                 return "No, " + original_response
             else:
-                return "Yeah, " + original_response
+                return "Yes, " + original_response
         
         elif 'how many' in question_lower:
             if any(word.isdigit() for word in original_response.split()):
