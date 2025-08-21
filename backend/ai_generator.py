@@ -86,13 +86,13 @@ class HuggingFaceCallerGenerator:
             with self.lock:
                 outputs = self.pipeline(
                     messages,
-                    max_new_tokens=100,
+                    max_new_tokens=256,  # Shorter responses
                     do_sample=True,
-                    temperature=0.7,
-                    top_p=0.9,
+                    temperature=0.4,     # Balanced - not too creative, not too robotic
+                    top_p=0.85,         
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
-                    repetition_penalty=1.2,
+                    repetition_penalty=1.1,
                 )
                 
                 response = outputs[0]['generated_text'][len(messages):].strip()
@@ -119,14 +119,9 @@ class HuggingFaceCallerGenerator:
             elif exchange['role'] == 'caller':
                 messages.append({"role": "assistant", "content": exchange['content']})
         
-        emotional_context = self._get_emotional_context(caller_state.emotional_state)
-        
-        current_question_instruction = f"""
-IMPORTANT: The 911 operator just asked: "{call_taker_message}"
-{emotional_context}
-Answer this question naturally and conversationally based on what you can see.
-Focus on providing a complete, human-sounding response that directly addresses the question.
-"""
+        current_question_instruction = f"""The 911 operator asked: "{call_taker_message}"
+
+Answer based only on the scenario information above."""
         
         messages.append({"role": "user", "content": current_question_instruction})
         
@@ -149,100 +144,39 @@ Focus on providing a complete, human-sounding response that directly addresses t
         return emotional_contexts.get(emotional_state, "You're concerned but trying to communicate clearly.")
     
     def _create_system_prompt(self, caller_state: CallerState, context: dict) -> str:
+        is_first_response = len(caller_state.conversation_history) == 0
         
-        role_clarification = ""
-        if "witness" in context['caller_background'].lower() or "bystander" in context['caller_background'].lower():
-            role_clarification = (
-                "CRITICAL: YOU ARE A WITNESS ONLY, NOT INVOLVED IN THE INCIDENT. "
-                "DO NOT CLAIM PERSONAL INVOLVEMENT OR INJURY. "
-                "YOU ONLY SAW WHAT HAPPENED BUT WERE NOT A PARTICIPANT. "
-                "RESPOND AS AN OBSERVER, NOT AS A VICTIM OR PARTICIPANT."
-            )
+        if is_first_response:
+            return f"""You are {context.get('caller_name', '')} calling 911. You've been in an accident.
+
+For your first response, just say something brief like "I've been in an accident" or "I need help, there's been a car accident." Don't give details yet."""
         
-        scenario_details = self._get_scenario_specific_prompt(context)
-        
-        return f"""You are {context['caller_name']} calling 911. The situation you are calling 911 for is: {context['situation']}
+        return f"""You are {context.get('caller_name', '')} calling 911 about an accident.
 
-Location: {context['location']}
-Your phone number: {context['phone']}
-Current emotional state: {caller_state.emotional_state.value}
-{role_clarification}
+Scenario details: {context.get('situation', '')}
+Location: {context.get('location', '')}
+Your role: {context.get('caller_background', '')}
+Current status: {context.get('current_status', '')}
+Your phone: {context.get('phone', '')}
 
-SCENARIO-SPECIFIC DETAILS:
-{scenario_details}
+Key principles:
+- When asked "what happened", give a short 2-sentence summary only and do NOT give any specific details from the scenario, only a generalized overview of the situation 
+- Wait for the operator to ask specific questions before giving details
+- Real people don't recite every fact at once
+- Answer only what was specifically asked
+- Keep each response to one main point
 
-CRITICAL RESPONSE GUIDELINES:
-1. Speak in NATURAL, CONVERSATIONAL language - like a real person in the situation would talk
-2. Use contractions (I'm, don't, can't) and informal expressions
-3. Answer questions directly and completely but conversationally
-4. If you don't know something, say "I'm not sure" or "I can't really tell from here"
-5. Keep responses focused and to the point - 1-2 clear sentences
-6. NEVER use formal or technical language - speak like a regular person
-7. Show appropriate concern through your word choice, not through excessive punctuation
-8. Use normal conversational patterns: "looks like", "seems like", "I think", "I guess"
-9. Stay in character as {context['caller_name']} 
-10. ONLY describe what is specifically mentioned in your scenario - do not make up details
-
-IMPORTANT: SOUND LIKE A REAL PERSON
-- Use natural speech patterns 
-- Vary sentence length and structure
-- Use conversational phrases like "Yeah", "Okay", "Right", "I mean"
-
-CRITICAL: STAY WITHIN YOUR SCENARIO
-- Only reference the location, people, and details from YOUR specific scenario
-- Do not mix information from other scenarios or locations
-- Stick to the facts as described in {context['current_status']} and {context['caller_background']}
-
-CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
-- For the first response, ONLY state the emergency
-- Wait for the operator to ask questions before providing details
-- Only answer the specific question asked
-"""
+Examples:
+- "What happened?" → "I crashed my car" (not a full story)
+- "Where are you?" → Give the location
+- "Are you hurt?" → Answer about injuries
+- "What's your phone number?" → Give the number"""
 
     def _get_scenario_specific_prompt(self, context: dict) -> str:
-        scenario_type = context.get('scenario_type', '')
-        scenario_type_lower = scenario_type.lower()
-        
-        if 'accident' in scenario_type_lower or 'crash' in scenario_type_lower or 'collision' in scenario_type_lower:
-            return """ACCIDENT-SPECIFIC DETAILS:
-- Note vehicle types, colors, what happened
-- Observe injuries, trapped people, hazards
-- Notice fluid leaks, airbags, damage
-- Count people involved, their conditions
-- Identify immediate dangers
-- Note vehicle positions and damage
-- Observe road conditions"""
-        
-        elif 'fire' in scenario_type_lower:
-            return """FIRE-SPECIFIC DETAILS:
-- Note size, location, spread of fire
-- Observe smoke color and direction
-- Identify potential victims or trapped people
-- Notice hazards
-- Check for evacuation status
-- Note building type"""
-        
-        elif 'medical' in scenario_type_lower or 'injury' in scenario_type_lower:
-            return """MEDICAL-SPECIFIC DETAILS:
-- Note if people are awake or unconscious
-- Observe breathing problems
-- Identify visible injuries, bleeding
-- Note approximate age and condition
-- Check for medical alerts
-- Observe responsiveness"""
-        
-        elif 'crime' in scenario_type_lower or 'robbery' in scenario_type_lower or 'assault' in scenario_type_lower:
-            return """CRIME-SPECIFIC DETAILS:
-- Note suspect descriptions: height, build, clothing
-- Observe weapons, direction they went, vehicles
-- Identify victims and their conditions
-- Notice time it happened
-- Note any distinctive features
-- Observe where they went"""
-        
-        return "Describe what you're seeing clearly and concisely."
-
+        return """You can only describe what is explicitly stated in your scenario facts above. Do not add details."""
+    
     def _clean_response(self, response: str, question: str = "", emotional_state: EmotionalState = None, caller_state: CallerState = None) -> str:
+        # Remove AI artifacts and prefixes
         artifacts = ["<|eot_id|>", "<|end_of_text|>", "<|start_header_id|>", "<|end_header_id|>", "*", "**", "`", "\"\"\""]
         for artifact in artifacts:
             response = response.replace(artifact, "")
@@ -254,35 +188,143 @@ CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
         
         response = response.replace("assistant", "").strip()
         
+        # Take only the first line to prevent rambling
         lines = [line.strip() for line in response.split('\n') if line.strip()]
         if lines:
             response = lines[0]
         
+        # Remove quotes
         response = re.sub(r'^"+|"+$', '', response)
         
-        response = self._fix_punctuation_and_trailing_off(response)
+        # Remove stage directions early in the process
+        response = self._remove_stage_directions(response)
         
+        # Fix sentence fragments
+        response = self._fix_sentence_fragments(response)
+        
+        # Fix grammar and punctuation
         response = self._fix_grammar_and_punctuation(response, emotional_state)
         
+        # Ensure response isn't too short
         if len(response.split()) < 3 or not response.strip():
-            response = "I can see what's happening from here."
+            response = self._generate_fallback_response(question, caller_state)
         
+        # Remove parenthetical and bracketed content
         response = re.sub(r'\(.*?\)', '', response)
         response = re.sub(r'\[.*?\]', '', response)
         
+        # Remove emotional indicators
         response = self._remove_emotional_indicators(response)
         
+        # Make language more natural
         response = self._naturalize_language(response, emotional_state)
         
-        if caller_state and len(caller_state.conversation_history) == 0:
-            response = self._limit_first_response(response, question)
+        # Fix poor grammar patterns
+        response = self._fix_poor_grammar(response)
         
+        # Validate response addresses the question
         if question and not self._validate_response_addresses_question(question, response):
             response = self._generate_direct_response(question, response, emotional_state)
 
+        # Add conversational elements sparingly
         response = self._add_conversational_elements(response, emotional_state)
         
+        # Fix hanging phrases
         response = self._fix_hanging_phrases(response)
+        
+        # Normalize punctuation
+        response = self._normalize_punctuation(response, emotional_state)
+        
+        # Final coherence check
+        response = self._ensure_coherent_response(response, question)
+        
+        return response.strip()
+
+    def _remove_stage_directions(self, response: str) -> str:
+        """Remove stage directions and action descriptions that don't belong in speech"""
+        # Remove common stage directions
+        stage_directions = [
+            r'\bpauses?\b', r'\bpause\b', r'\blaughs?\b', r'\blaughter\b', 
+            r'\bsighs?\b', r'\bcries?\b', r'\bsobbing\b', r'\bwhispers?\b',
+            r'\bshouts?\b', r'\byells?\b', r'\bscreams?\b', r'\bmumbles?\b',
+            r'\bstutters?\b', r'\bhesitates?\b', r'\bclears throat\b',
+            r'\btakes a breath\b', r'\bbreathing heavily\b', r'\bsniffles?\b',
+            r'\bvoice shaking\b', r'\bvoice trembling\b', r'\bin a shaky voice\b'
+        ]
+        
+        for direction in stage_directions:
+            response = re.sub(direction, '', response, flags=re.IGNORECASE)
+        
+        # Remove text in parentheses that contains stage directions
+        response = re.sub(r'\([^)]*(?:pause|laugh|sigh|cry|whisper|shout|yell|scream|mumble|stutter|hesitate|breath|sniffle|shake|tremble)[^)]*\)', '', response, flags=re.IGNORECASE)
+        
+        # Clean up multiple spaces left by removals
+        response = re.sub(r'\s+', ' ', response)
+        
+        return response.strip()
+
+    def _generate_fallback_response(self, question: str, caller_state: CallerState) -> str:
+        """Generate a fallback response when the original is too short or nonsensical"""
+        if not question:
+            return "I need help."
+        
+        question_lower = question.lower()
+        
+        if 'number' in question_lower or 'phone' in question_lower:
+            context = caller_state.caller_profile.get('selected_context', {}) if caller_state else {}
+            phone = context.get('phone', '587-555-0123')
+            return f"It's {phone}."
+        
+        elif 'location' in question_lower or 'where' in question_lower:
+            return "I'm not sure of the exact address."
+        
+        elif 'hurt' in question_lower or 'injured' in question_lower:
+            return "I'm not sure."
+        
+        elif 'happened' in question_lower or 'what' in question_lower:
+            return "There's been an accident."
+        
+        return "I'm not sure about that."
+
+    def _ensure_coherent_response(self, response: str, question: str) -> str:
+        """Final check to ensure the response makes sense and answers the question"""
+        if not response or len(response.split()) < 2:
+            return self._generate_fallback_response(question, None)
+        
+        # Remove nonsensical phrases
+        nonsense_patterns = [
+            r'\bthingamajig\b', r'\bwhatever\b', r'\banyway\b(?!\s+\w+)',
+            r'\bwherever I\'m anyway\b', r'\bthat\'s where I\'m\. wherever I\'m\b',
+            r'\bthis thingamajig has GPS on it\b'
+        ]
+        
+        for pattern in nonsense_patterns:
+            response = re.sub(pattern, '', response, flags=re.IGNORECASE)
+        
+        # Clean up the response
+        response = re.sub(r'\s+', ' ', response).strip()
+        
+        # If response became too short, provide a simple answer
+        if len(response.split()) < 3:
+            return self._generate_fallback_response(question, None)
+        
+        return response
+
+    def _fix_sentence_fragments(self, response: str) -> str:
+        # Fix common fragment patterns at the start
+        response = re.sub(r'^\s*([A-Z])\.\s*([A-Z])', r'\1\2', response)
+        response = re.sub(r'^\s*([A-Z][a-z]*)\.\s*([A-Z][a-z]*)', r'\1 \2', response)
+        response = re.sub(r'^\s*([A-Z][a-z]*)\.\s+([A-Z][a-z]*)', r'\1 \2', response)
+        response = re.sub(r'^([A-Z][a-z]*)\.\s*([A-Z][a-z]*)', r'\1 \2', response)
+        response = re.sub(r'^\s*([A-Z][a-z]{1,3})\.\s*([A-Z])', r'\1 \2', response)
+        
+        # Fix fragments in the middle of sentences
+        response = re.sub(r'\b([A-Z][a-z]{1,3})\.\s*([A-Z][a-z])', r'\1 \2', response)
+        
+        # Fix specific problematic patterns
+        response = re.sub(r'\bIt\.\s*It\'s\b', "It's", response)
+        response = re.sub(r'\bMy\.\s*Uh\.\s*', "My ", response)
+        response = re.sub(r'\bWe\.\s*We\'re\b', "We're", response)
         
         return response.strip()
 
@@ -307,16 +349,27 @@ CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
         
         return response
     
-    def _fix_punctuation_and_trailing_off(self, response: str) -> str:
+    def _normalize_punctuation(self, response: str, emotional_state: EmotionalState = None) -> str:
+        response = re.sub(r'!+', '!', response)
+        response = re.sub(r'!\s*!', '!', response)
+        
         response = re.sub(r'\.\.\.+', '.', response)
         response = re.sub(r'\.\s*\.', '.', response)
         response = re.sub(r'\.\s+$', '.', response)
         
-        response = re.sub(r'!+', '!', response)
-        response = re.sub(r'!\s*!', '!', response)
+        response = re.sub(r'[!?]\.', '.', response)
+        response = re.sub(r'\.!', '.', response)
         
-        response = re.sub(r'[!?]\.', '!', response)
-        response = re.sub(r'\.!', '!', response)
+        exclamation_pattern = r'!(?=\s+[A-Z]|\s*$)'
+        
+        if emotional_state in [EmotionalState.CALM, EmotionalState.WORRIED, EmotionalState.RELIEVED]:
+            response = re.sub(exclamation_pattern, '.', response)
+        elif emotional_state in [EmotionalState.PANICKED, EmotionalState.HYSTERICAL]:
+            exclamation_count = len(re.findall(r'!', response))
+            if exclamation_count > 2:
+                matches = list(re.finditer(r'!', response))
+                for i, match in enumerate(matches[2:], 2):
+                    response = response[:match.start()] + '.' + response[match.end():]
         
         if not response.endswith(('.', '!', '?')):
             sentences = re.split(r'[.!?]', response)
@@ -369,33 +422,6 @@ CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
             response = ' '.join(words)
         
         response = re.sub(r'\s+([.!?])', r'\1', response)
-        
-        return response
-    
-    def _limit_first_response(self, response: str, question: str) -> str:
-        if "911, what is your emergency" in question.lower() or "what is your emergency" in question.lower():
-            response_words = response.split()
-            if len(response_words) > 12:
-                for i in range(min(10, len(response_words)), len(response_words)):
-                    if response_words[i].endswith(('.', '!', '?')):
-                        response = ' '.join(response_words[:i+1])
-                        break
-                else:
-                    response = ' '.join(response_words[:12]) + '...'
-            
-            detailed_phrases = [
-                'looks like', 'seems like', 'appears to be', 'i think', 'i believe',
-                'one car', 'another car', 'both cars', 'vehicles', 'accident type',
-                'injured', 'hurt', 'damage', 'wrecked', 'rolled over', 'flipped',
-                'black ice', 'cause', 'reason', 'because'
-            ]
-            
-            for phrase in detailed_phrases:
-                if phrase in response.lower():
-                    first_sentence = response.split('.')[0] + '.'
-                    if len(first_sentence.split()) >= 4:
-                        response = first_sentence
-                    break
         
         return response
     
@@ -486,8 +512,25 @@ CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
         response = re.sub(r'appears to be conscious', r'seems awake', response)
         response = re.sub(r'bleeding profusely', r'bleeding a lot', response)
         
-        if emotional_state in [EmotionalState.PANICKED, EmotionalState.HYSTERICAL]:
-            response = self._add_emotional_urgency(response)
+        return response
+    
+    def _fix_poor_grammar(self, response: str) -> str:
+        grammar_fixes = {
+            r'\bplz\b': 'please',
+            r'\bu\b': 'you',
+            r'\bur\b': 'your',
+            r'\bcuz\b': 'because',
+            r'\bya\b': 'you',
+            r'\bem\b(?!\w)': 'them',
+            r'\bn\b(?=\s)': 'and'
+        }
+        
+        for incorrect, correct in grammar_fixes.items():
+            response = re.sub(incorrect, correct, response, flags=re.IGNORECASE)
+        
+        response = re.sub(r'\bthey coulda\b', 'they could have', response, flags=re.IGNORECASE)
+        response = re.sub(r'\bwoulda\b', 'would have', response, flags=re.IGNORECASE)
+        response = re.sub(r'\bshoulda\b', 'should have', response, flags=re.IGNORECASE)
         
         return response
     
@@ -496,57 +539,36 @@ CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
             return response
 
         starters = ["Um, ", "Well, ", "Okay, ", "So, ", "Right, "]
-
-        fillers = [" like", " you know", " I mean", " I guess", " kinda", " sort of"]
+        fillers = [" like", " you know", " I mean", " I guess"]
         
-        starter_prob = 0.2
+        # Reduce probability of adding conversational elements to keep responses cleaner
+        starter_prob = 0.02
+        filler_prob = 0.01
+        
         if emotional_state in [EmotionalState.PANICKED, EmotionalState.HYSTERICAL]:
-            starter_prob = 0.3  
+            starter_prob = 0.05
+            filler_prob = 0.02
             
-        if random.random() < starter_prob and not response.startswith(("Yeah", "Um", "Well", "Okay", "So", "Right")):
+        if random.random() < starter_prob and not response.startswith(("Um", "Well", "Okay", "So", "Right")):
             response = random.choice(starters) + response.lower()
 
-        if random.random() < 0.2:
+        if random.random() < filler_prob:
             words = response.split()
-            if len(words) > 3:
-                insert_pos = random.randint(1, len(words)-2)
-                words.insert(insert_pos, random.choice(fillers))
-                response = " ".join(words)
-
-        if emotional_state in [EmotionalState.PANICKED, EmotionalState.HYSTERICAL] and random.random() < 0.3:
-            if "." in response:
-                parts = response.split(".", 1)
-                response = parts[0] + "... " + parts[1].strip()
-            elif " " in response:
-                words = response.split()
-                if len(words) > 2:
-                    insert_pos = random.randint(1, len(words)-1)
-                    words.insert(insert_pos, "...")
+            if len(words) > 5:  # Only add fillers to longer responses
+                insert_pos = random.randint(2, len(words)-2)  # Avoid inserting too early or late
+                safe_to_insert = True
+                
+                if insert_pos > 0:
+                    prev_word = words[insert_pos-1]
+                    if prev_word.endswith(('.', '!', '?')):
+                        safe_to_insert = False
+                
+                if safe_to_insert:
+                    words.insert(insert_pos, random.choice(fillers))
                     response = " ".join(words)
         
         return response
     
-    def _add_emotional_urgency(self, response: str) -> str:
-        urgent_patterns = [
-            (r'\.(?!\w)', '!'),
-            (r'There\'s', "There's just"),
-            (r'It looks', "It really looks")
-        ]
-        
-        for pattern, replacement in urgent_patterns:
-            response = re.sub(pattern, replacement, response)
-        
-        urgent_prefixes = [
-            "Oh my god, ",
-            "Seriously, ",
-            "I can't believe it, "
-        ]
-        
-        if random.random() < 0.2:
-            response = random.choice(urgent_prefixes) + response.lower()
-        
-        return response
-
     def _validate_response_addresses_question(self, question: str, response: str) -> bool:
         question_lower = question.lower()
         response_lower = response.lower()
@@ -582,13 +604,7 @@ CRITICAL: DO NOT VOLUNTEER DETAILS UNLESS ASKED!
     def _generate_direct_response(self, question: str, original_response: str, emotional_state: EmotionalState = None) -> str:
         question_lower = question.lower()
         
-        if any(word in question_lower for word in ['is ', 'are ', 'do ', 'does ', 'did ', 'was ', 'were ', 'has ', 'have ']):
-            if 'not' in original_response.lower() or 'no ' in original_response.lower() or "don't" in original_response.lower():
-                return "No, " + original_response
-            else:
-                return "Yeah, " + original_response
-        
-        elif 'how many' in question_lower:
+        if 'how many' in question_lower:
             if any(word.isdigit() for word in original_response.split()):
                 return original_response
             return "I'd say " + original_response
