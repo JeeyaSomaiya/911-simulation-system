@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from models import SessionData, CallerState, ScenarioType, EmotionalState
+from scenario_contexts import get_random_scenario_context
 
 sessions = {}
 
@@ -127,13 +128,18 @@ class SessionManager:
         ] else 7
         initial_emotion = EmotionalState.PANICKED if initial_intensity > 7 else EmotionalState.WORRIED
         
+        selected_context = get_random_scenario_context(scenario_enum)
+        
         initial_state = CallerState(
             emotional_state=initial_emotion,
             intensity=initial_intensity,
             scenario_type=scenario_enum,
             key_details_revealed=[],
             conversation_history=[],
-            caller_profile={"scenario": scenario_type},
+            caller_profile={
+                "scenario": scenario_type,
+                "selected_context": selected_context
+            },
             scenario_progress=0.0
         )
         
