@@ -80,7 +80,7 @@ const SessionTranscriptModal = ({ session, scenarios, onClose }) => {
             </div>
             <div className="summary-stat">
               <span className="stat-label">Progress</span>
-              <span className="stat-value">{session.scenarioProgress * 100 || 0}%</span>
+              <span className="stat-value">{Math.round(session.scenarioProgress * 100) || 0}%</span>
             </div>
             <div className="summary-stat">
               <span className="stat-label">Final State</span>

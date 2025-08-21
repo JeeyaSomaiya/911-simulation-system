@@ -253,7 +253,7 @@ const SessionHistory = () => {
                 <div className="metric">
                   <span className="metric-label">Progress</span>
                   <p className="metric-value">
-                    {session.scenarioProgress * 100 || 0}%
+                    {Math.round(session.scenarioProgress * 100) || 0}%
                   </p>
                 </div>
                 
