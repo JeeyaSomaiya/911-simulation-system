@@ -9,7 +9,7 @@ from threading import Lock
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 from models import CallerState, ScenarioType, EmotionalState
-from scenario_contexts import load_scenario_contexts
+from scenario_contexts import load_scenario_contexts, get_random_scenario_context
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class HuggingFaceCallerGenerator:
             raise RuntimeError("Model loading failed")
 
     def generate_response(self, caller_state: CallerState, call_taker_message: str) -> Tuple[str, CallerState]:
-        context = self.scenario_contexts.get(caller_state.scenario_type)
+        context = get_random_scenario_context(caller_state.scenario_type)
         if not context:
             logger.error(f"No context for scenario: {caller_state.scenario_type}")
             return "I need help!", caller_state
@@ -322,6 +322,27 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
             response = self._generate_direct_response(question, response, emotional_state)
         
         return response.strip()
+
+    def _fix_grammar_and_punctuation(self, response: str, emotional_state: EmotionalState = None) -> str:
+        sentences = re.split(r'([.!?]+)', response)
+        corrected_sentences = []
+        
+        for i, part in enumerate(sentences):
+            if i % 2 == 0:
+                part = part.strip()
+                if part:
+                    part = part[0].upper() + part[1:] if len(part) > 1 else part.upper()
+                corrected_sentences.append(part)
+            else:  
+                corrected_sentences.append(part)
+        
+        response = ''.join(corrected_sentences)
+        
+        response = re.sub(r'([.!?])([A-Za-z])', r'\1 \2', response)
+
+        response = re.sub(r'\bi\b', 'I', response)
+        
+        return response
     
     def _fix_punctuation_and_trailing_off(self, response: str) -> str:
         response = re.sub(r'\.\.\.+', '.', response)
@@ -685,7 +706,7 @@ SPECIAL: If asked "911, what is your emergency?" respond ONLY with: {initial_que
         return min(1.0, overlap * 1.5)
 
     def generate_initial_response(self, scenario_type: ScenarioType) -> str:
-        context = self.scenario_contexts.get(scenario_type)
+        context = get_random_scenario_context(scenario_type)
         if not context:
             return "Help! There's an emergency!"
         

@@ -1,16 +1,28 @@
 from models import ScenarioType
+import random
 
 def load_scenario_contexts():
     return {
-        ScenarioType.TRAFFIC_ACCIDENT_10_01: {
-            "location": "Cranston Ave SE / Deerfoot Tr SE",
-            "caller_name": "Broderick Greene", 
-            "phone": "403-561-9988",
-            "situation": "Witnessed a rollover accident. White SUV is currently in the ditch off southbound Deerfoot Trail just south of Cranston Ave SE. Vehicle appears to have rolled over due to black ice conditions.",
-            "current_status": "Drive-by caller who has already left the scene. Observed the accident about 1 minute ago. Driver appears to be injured and trapped in the overturned vehicle.",
-            "caller_background": "Excited drive-by caller who witnessed the accident while driving. Not at scene anymore but concerned about the driver's safety.",
-            "initial_response": "There's been a bad accident!"
-        },
+        ScenarioType.TRAFFIC_ACCIDENT_10_01: [
+            {
+                "location": "Cranston Ave SE / Deerfoot Tr SE",
+                "caller_name": "Broderick Greene", 
+                "phone": "403-561-9988",
+                "situation": "Witnessed a rollover accident. White SUV is currently in the ditch off southbound Deerfoot Trail just south of Cranston Ave SE. Vehicle appears to have rolled over due to black ice conditions.",
+                "current_status": "Drive-by caller who has already left the scene. Observed the accident about 1 minute ago. Driver appears to be injured and trapped in the overturned vehicle.",
+                "caller_background": "Excited drive-by caller who witnessed the accident while driving. Not at scene anymore but concerned about the driver's safety.",
+                "initial_response": "There's been a bad accident!"
+            },
+            {
+                "location": "Memorial Dr NW / 19 St NW",
+                "caller_name": "Sarah Mitchell", 
+                "phone": "403-555-7234",
+                "situation": "Multi-vehicle collision involving three cars. Front car stopped suddenly, causing chain reaction. Two vehicles have significant front/rear damage.",
+                "current_status": "All drivers are out of vehicles and appear conscious. Traffic is completely blocked eastbound on Memorial Drive. Some people seem shaken up.",
+                "caller_background": "Pedestrian witness who saw the accident from the sidewalk. Stopped to help and call 911.",
+                "initial_response": "There's been a three-car accident."
+            }
+        ],
         ScenarioType.TRAFFIC_ACCIDENT_10_02: {
             "location": "10 AV SW / 16 ST SW",
             "caller_name": "Candy Wise", 
@@ -93,4 +105,24 @@ def load_scenario_contexts():
             "initial_response": "We've been robbed!"
         }
     }
+
+def get_random_scenario_context(scenario_type: ScenarioType):
+    all_contexts = load_scenario_contexts()
+    contexts_for_type = all_contexts.get(scenario_type, [])
+    
+    if not contexts_for_type:
+        return {
+            "location": "Unknown Location",
+            "caller_name": "Unknown Caller", 
+            "phone": "403-000-0000",
+            "situation": "Emergency situation",
+            "current_status": "Situation in progress",
+            "caller_background": "Caller reporting emergency",
+            "initial_response": "There's an emergency."
+        }
+
+    if isinstance(contexts_for_type, list):
+        return random.choice(contexts_for_type)
+    else:
+        return contexts_for_type
     
