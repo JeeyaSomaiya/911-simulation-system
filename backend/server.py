@@ -40,7 +40,6 @@ def create_session():
         scenario_type = data.get('scenario_type', '10-01')
         
         session = session_manager.create_session(trainee_id, scenario_type)
-        initial_message = generator.generate_initial_response(session.scenario_type)
         
         logger.info(f"Created session {session.session_id} for {scenario_type}")
         
