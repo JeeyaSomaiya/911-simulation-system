@@ -21,7 +21,6 @@ const CallInterface = () => {
   const inputRef = useRef(null);
   const hasLoadedSession = useRef(false);
 
-  // Load session info on mount - ONLY ONCE
   useEffect(() => {
     if (sessionId && !hasLoadedSession.current) {
       hasLoadedSession.current = true;
@@ -43,7 +42,6 @@ const CallInterface = () => {
     }
   }, [sessionId, getSession, navigate]);
 
-  // Auto-scroll to bottom
   useLayoutEffect(() => {
     if (shouldAutoScroll && transcriptRef.current) {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
@@ -58,7 +56,6 @@ const CallInterface = () => {
     }
   };
 
-  // Use useEffect to set up event listeners only once
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === 'Enter' && !isSendingRef.current && inputRef.current === document.activeElement) {
@@ -139,19 +136,16 @@ const CallInterface = () => {
   const handleRetry = async () => {
     setIsRestarting(true);
     try {
-      // Get trainee_id from localStorage or use a default
       const traineeId = localStorage.getItem('trainee_id') || 'default-trainee-id';
       
-      // Create a new session with the same scenario type
       if (sessionInfo && sessionInfo.scenario_type) {
         const newSession = await createSession({
           trainee_id: traineeId,
           scenario_type: sessionInfo.scenario_type
         });
-        
-        // Navigate to the new session
+
         navigate(`/call/${newSession.session_id}`);
-        window.location.reload(); // Force reload to reset the component completely
+        window.location.reload(); 
       }
     } catch (error) {
       console.error('Failed to restart session:', error);
@@ -232,14 +226,19 @@ const CallInterface = () => {
             placeholder={isSending ? "Waiting for response..." : "Type your response ..."}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); 
+                if (!isSending && !isRestarting && inputMessage.trim()) {
+                  handleSendMessage();
+                }
+              }
+            }}
             disabled={isSending || isRestarting}
           />
           <button 
             className="send-button"
-            onClick={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
+            onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isSending || isRestarting}
           >
             {isSending ? 'Sending...' : 'Send'}

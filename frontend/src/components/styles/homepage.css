@@ -7,12 +7,14 @@
   gap: 32px;
 }
 
-/* Main stats and CTA container */
 .main-card {
   background-color: var(--primary-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .stats-container {
@@ -41,10 +43,6 @@
   font-weight: 400;
 }
 
-.cta-section {
-  text-align: center;
-}
-
 .simulate-call-btn {
   background-color: var(--accent-blue);
   color: white;
@@ -64,13 +62,11 @@
 
 .simulate-call-btn:hover {
   background-color: #3367d6;
-  transform: translateY(-1px);
 }
 
 .simulate-call-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 .phone-icon {
@@ -78,7 +74,6 @@
   height: 20px;
 }
 
-/* Section containers - now stacked vertically */
 .sections-container {
   display: flex;
   flex-direction: column;
@@ -100,6 +95,7 @@
   font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
+  text-align: left;
 }
 
 .empty-state {
@@ -107,4 +103,98 @@
   color: var(--text-secondary);
   font-size: 16px;
   margin-top: 16px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.view-all-btn {
+  background: none;
+  border: none;
+  color: var(--accent-blue);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.view-all-btn:hover {
+  background: var(--hover-bg);
+  color: var(--accent-blue-hover);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.history-item {
+  background: var(--primary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.history-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; 
+  width: 100%; 
+}
+
+.scenario-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+  text-align: left; 
+  max-width: 70%; 
+  padding-left: 15px;
+}
+
+.history-item-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center; 
+  flex: 1; 
+}
+
+.detail-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
 }

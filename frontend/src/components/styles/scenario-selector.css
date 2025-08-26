@@ -131,6 +131,10 @@
   margin-left: 5px;
 }
 
+.checkbox-container:hover {
+  color: var(--accent-blue)
+}
+
 .checkbox-container input[type="checkbox"] {
   width: 20px;
   height: 20px;
