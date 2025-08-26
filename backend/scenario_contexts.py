@@ -93,6 +93,12 @@ def load_scenario_contexts():
                 "situation": "Non-injury accident - Silver Nissan Altima with license plate TEW908 was skidding on ice, lost control, and crashed into a pole. Vehicle is not drivable. Traffic can get around, traffic is not blocked.",
                 "current_status": "Vehicle is still against the pole to the left of the road. Car is not drivable. No traffic is blocked.",
                 "caller_background": "Driver of the Nissan Altima (single vehicle accident victim), is panicked."
+            },
+            {
+                "location": "37 Street SE / 23 Avenue SE",
+                "situation": "Non-injury accident - Silver Nissan Rogue with license plate WOE377 turned left on a red light and T-boned the caller, Blue Dodge Durango with license plate VLB008, while they were going straight on a green light. Intersection is blocked and neither cars are drievable. ",
+                "current_status": "Both vehicles are still in intersection, traffic is blocked around because intersection is blocked. Cars are not driveable.",
+                "caller_background": "Blue Dodge Durango driver (victim who got t-boned)."
             }
         ],
         ScenarioType.ROBBERY_10_30: {
