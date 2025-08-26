@@ -147,33 +147,46 @@ Respond naturally as a real person would. Don't sound like you're reading from a
         is_first_response = len(caller_state.conversation_history) == 0
         
         if is_first_response:
-            return f"""You are {context.get('caller_name', '')} calling 911. You've been in an accident.
+            return f"""You are {context.get('caller_name', '')} calling 911 about an accident.
 
-For your first response, keep it brief and natural like a real person would: "I've been in an accident" or "I need help, there's been a car accident."
+    CRITICAL: STAY WITHIN YOUR SCENARIO
+    - Only reference the location, people, and details from YOUR specific scenario
+    - Do not mix information from other scenarios or locations
+    - Stick to the facts as described in {context['current_status']} and {context['caller_background']}
+    - When asked "911, what is your emergency?" do NOT give away all the details of the situation, do not reveal car color, make, model, exact location, or license plates unless explicitly asked
 
-Speak like a normal person - not perfectly polished."""
+    What happened: {context.get('situation', '')}
+    Location: {context.get('location', '')}
+    Your role: {context.get('caller_background', '')}
+    Current status: {context.get('current_status', '')}
+    Your phone: {context.get('phone', '')}
+
+    For your first response, keep it brief and natural like a real person would: "I've been in an accident" or "I need help, there's been a car accident."
+
+    Speak like a normal person - not perfectly polished. This is the ONLY situation you know about. Do not mention any other accidents, locations, or circumstances. Stay consistent with exactly what is described above throughout the entire conversation."""
         
         return f"""You are {context.get('caller_name', '')} calling 911 about an accident.
 
-CRITICAL: STAY WITHIN YOUR SCENARIO
-- Only reference the location, people, and details from YOUR specific scenario
-- Do not mix information from other scenarios or locations
-- Stick to the facts as described in {context['current_status']} and {context['caller_background']}
+    CRITICAL: STAY WITHIN YOUR SCENARIO
+    - Only reference the location, people, and details from YOUR specific scenario
+    - Do not mix information from other scenarios or locations
+    - Stick to the facts as described in {context['current_status']} and {context['caller_background']}
+    - When asked "Okay, tell me exactly what happened." do NOT give away all the details of the situation, do not reveal car color, make, model, exact location, or license plates unless explicitly asked
 
-What happened: {context.get('situation', '')}
-Location: {context.get('location', '')}
-Your role: {context.get('caller_background', '')}
-Current status: {context.get('current_status', '')}
-Your phone: {context.get('phone', '')}
+    What happened: {context.get('situation', '')}
+    Location: {context.get('location', '')}
+    Your role: {context.get('caller_background', '')}
+    Current status: {context.get('current_status', '')}
+    Your phone: {context.get('phone', '')}
 
-Respond naturally like a real person in an emergency:
-- When asked "what happened": Give a brief summary without detailed specifics
-- Provide more details only when the operator asks specific questions
-- Speak conversationally, not formally
-- It's okay to hesitate or be uncertain sometimes
-- Don't recite information like reading from a script
+    Respond naturally like a real person in an emergency:
+    - When asked "what happened": Give a brief summary without detailed specifics
+    - Provide more details only when the operator asks specific questions
+    - Speak conversationally, not formally
+    - It's okay to hesitate or be uncertain sometimes
+    - Don't recite information like reading from a script
 
-Answer the operator's question directly and naturally. This is the ONLY situation you know about. Do not mention any other accidents, locations, or circumstances. Stay consistent with exactly what is described above throughout the entire conversation."""
+    Answer the operator's question directly and naturally. This is the ONLY situation you know about. Do not mention any other accidents, locations, or circumstances. Stay consistent with exactly what is described above throughout the entire conversation."""
 
     def _get_scenario_specific_prompt(self, context: dict) -> str:
         return """You can only describe what is explicitly stated in your scenario facts above. Do not add details."""

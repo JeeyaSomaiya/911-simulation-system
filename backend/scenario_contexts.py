@@ -43,55 +43,55 @@ def load_scenario_contexts():
             {
                 "location": "Macleod Trail SE / 12 Avenue SE",
                 "situation": "Non-injury accident - one vehicle ran into the side of another at the intersection. Vehicles are not driveable, occurred in the middle of the intersection. Traffic is blocked going northbound. Grey sedan and green hatchback involved.",
-                "current_status": "Both cars are still in the intersection. Traffic backing up northbound but no injuries reported.",
+                "current_status": "Both cars are still in the intersection. Traffic backing up northbound but no injuries reported, both cars present at the scene.",
                 "caller_background": "Witness who saw the accident while driving by in their car."
             },
             {
                 "location": "Stoney Trail / 16 Avenue NE",
                 "situation": "Non-injury accident - Red Dodge Ram with license plate CCB9173 side swiped a grey Nissan Murano with license plate HRG8156 coming off the ramp on Stoney trail. Both vehicles are drivable, traffic is not blocked.",
-                "current_status": "Both cars pulled over on the shoulder of Stoney trail, no traffic being backed up.",
-                "caller_background": "Driver of the Nissan Murano (victim who got side swiped), is angry about the situation."
+                "current_status": "Both cars pulled over on the shoulder of Stoney trail, no traffic being backed up, both cars present at the scene.",
+                "caller_background": "Driver of the Nissan Murano (victim who got side swiped), caller is angry about the situation and angry at the other driver."
             },
             {
                 "location": "Shaganappi Trail / Bowness Road NW",
                 "situation": "Non-injury accident - Brown Ford car with license plate BBK9203 turned the corner into an Audi Q4 with license plate KWP681. Both vehicles are drivable, right lane of traffic is blocked.",
-                "current_status": "Both cars are pulled over in the right lane of westbound Bowness Road. Right lane of traffic being blocked.",
+                "current_status": "Both cars are pulled over in the right lane of westbound Bowness Road. Right lane of traffic being blocked. Both cars present at the scene.",
                 "caller_background": "Driver of the Audi Q4 (victim who got hit), is panicked."
             },
             {
                 "location": "Address: 4611 14 Street NW, Name: the Winter Club",
                 "situation": "Non-injury accident - Black Honda CRV with license plate BKP9750 backed into a grey Toyota RAV4 with license plate GAP837 while reversing out of a parking spot in a parking lot. Both vehicles are drivable, no traffic is blocked.",
-                "current_status": "Both cars are stopped in the parking lot, traffic can get around, no traffic blocked.",
+                "current_status": "Both cars are stopped in the parking lot, traffic can get around, no traffic blocked. Both cars present at the scene.",
                 "caller_background": "Driver of the Toyota RAV4 (victim who got backed into), is frustrated."
             },
             {
                 "location": "Centre Street / 56 Avenue NE",
                 "situation": "Non-injury accident - White Volkswagen Golf with license plate HOU7689 rear-ended a red Mazda 3 with license plate HUY7510 when the Mazda 3 braked hard. Vehicles are not drivable, traffic is blocked on the left lane of Northbound Centre Street.",
-                "current_status": "Both cars are stopped in the left lane of Centre Street, traffic is blocked in the left lane. Volkswagen Golf is leaking fluids.",
+                "current_status": "Both cars are stopped in the left lane of Centre Street, traffic is blocked in the left lane. Volkswagen Golf is leaking fluids. Both cars present at the scene.",
                 "caller_background": "Driver of the Volkswagen Golf (at-fault driver who rear-ended the other car), is panicked."
             },
             {
                 "location": "Fairmount Drive SE",
                 "situation": "Non-injury accident - Red Honda CRV with license plate PQI863 skid on a patch of ice and hit the median. Car's wheel is pushed out of position. Vehicle is not drivable. Traffic is blocked in the left lane of northbound Fairmount Drive.",
-                "current_status": "Car stopped against the median of the left lane of Fairmount Drive. Traffic is blocked in the left lane. Car's wheel is out of place.",
+                "current_status": "Car stopped against the median of the left lane of Fairmount Drive. Traffic is blocked in the left lane. Car's wheel is out of place. Car is present at the scene.",
                 "caller_background": "Driver of the Honda CRV (single vehicle accident victim), is panicked."
             },
             {
                 "location": "96 Ave SW / Hillgrove Drive SW",
                 "situation": "Non-injury accident - Red Toyota Camry with license plate DHT294 drove through a stop sign and ran into the side of a black Honda Accord with license plate QXM872 (T-bone accident). Intersection is blocked, vehicles are not drivable. Traffic is blocked around the intersection.",
-                "current_status": "Both vehicles stopped in the intersection. Traffic is blocked around the intersection.",
+                "current_status": "Both vehicles stopped in the intersection. Traffic is blocked around the intersection, both cars present at the scene.",
                 "caller_background": "Driver of the Honda Accord (victim who got T-boned), is frustrated."
             },
             {
                 "location": "Deerfoot Trail / McKnight Boulevard NE ",
                 "situation": "Non-injury accident - stop and go traffic on Deerfoot trail, White Ford F-150 with license plate JLK321 rear-ended a blue Chevrolet Malibu with license plate RNS430. Both vehicles are drivable and pulled over to the shoulder of northbound Deerfoot trail.",
-                "current_status": "Both vehicles pulled over to the shoulder of northbound Deerfoot, no traffic is blocked.",
+                "current_status": "Both vehicles pulled over to the shoulder of northbound Deerfoot, no traffic is blocked, both cars present at the scene.",
                 "caller_background": "Driver of the Chevrolet Malibu (victim who got rear-ended)"
             },
             {
                 "location": "35 Ave SW near Glenpatrick Dr SW",
                 "situation": "Non-injury accident - Silver Nissan Altima with license plate TEW908 was skidding on ice, lost control, and crashed into a pole. Vehicle is not drivable. Traffic can get around, traffic is not blocked.",
-                "current_status": "Vehicle is still against the pole to the left of the road. Car is not drivable. No traffic is blocked.",
+                "current_status": "Vehicle is still against the pole to the left of the road. Car is not drivable. No traffic is blocked, car is present at the scene.",
                 "caller_background": "Driver of the Nissan Altima (single vehicle accident victim), is panicked."
             },
             {
@@ -99,6 +99,12 @@ def load_scenario_contexts():
                 "situation": "Non-injury accident - Silver Nissan Rogue with license plate WOE377 turned left on a red light and T-boned the caller, Blue Dodge Durango with license plate VLB008, while they were going straight on a green light. Intersection is blocked and neither cars are drievable. ",
                 "current_status": "Both vehicles are still in intersection, traffic is blocked around because intersection is blocked. Cars are not driveable.",
                 "caller_background": "Blue Dodge Durango driver (victim who got t-boned)."
+            },
+            {
+                "location": "Alleyway near Silverado Plains Circle SW between Silverado Way SW",
+                "situation": "Non-injury accident - caller saw a car come around the corner really fast in the alley and saw that the car hit the fence of the house across from the calller. Caller is not driving. Car is driveable and drove away, but caller saw the license plate before the car left. Car was a white Audi Q5 with license plate JNM430. No traffic is blocked, there is obvious damage to the fence.",
+                "current_status": "Car has driven away, traffic is not blocked at all, there is obvious damage to the fence that the car hit. Car is not present at the scene.",
+                "caller_background": "Bystander who saw the accident from their house, caller was NOT driving."
             }
         ],
         ScenarioType.ROBBERY_10_30: {
