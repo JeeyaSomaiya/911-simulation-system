@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from './authContext';
 
-const API_BASE_URL = 'http://130.250.171.84:5000';
+const API_BASE_URL = 'http://130.250.171.225:5000';
 
 export const useSession = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -70,7 +70,7 @@ export const useSession = () => {
     setError(null);
     
     try {
-      console.log('📤 Sending message:', { sessionId, message });
+      console.log('Sending message:', { sessionId, message });
       
       const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}/message`, {
         method: 'POST',
@@ -126,7 +126,7 @@ export const useSession = () => {
           
           localStorage.setItem(`user_${user.id}_sessions`, JSON.stringify(userSessions));
           
-          console.log('💬 CONVERSATION UPDATED:');
+          console.log('CONVERSATION UPDATED:');
           console.log('- Session ID:', sessionId);
           console.log('- New message count:', updatedConversation.length);
           console.log('- Call taker message:', callTakerMessage);
@@ -134,13 +134,13 @@ export const useSession = () => {
           console.log('- Full conversation:', updatedConversation);
           console.log('- Updated session:', userSessions[sessionIndex]);
         } else {
-          console.error('❌ Session not found in localStorage for ID:', sessionId);
+          console.error('Session not found in localStorage for ID:', sessionId);
         }
       }
       
       return data;
     } catch (err) {
-      console.error('❌ Send message error:', err);
+      console.error('Send message error:', err);
       setError(err.message);
       throw err;
     } finally {
@@ -153,66 +153,28 @@ export const useSession = () => {
     setError(null);
     
     try {
-      console.log('🔚 Terminating session:', sessionId);
+      console.log('Terminating session:', sessionId);
       
-      let localSessionData = null;
-      if (user) {
-        const userSessions = JSON.parse(localStorage.getItem(`user_${user.id}_sessions`) || '[]');
-        localSessionData = userSessions.find(s => s.session_id === sessionId);
-        console.log('📋 Local session data before termination:', localSessionData);
-        console.log('📊 Local conversation count:', localSessionData?.conversation?.length || 0);
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}/end`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const apiResponse = await response.json();
       console.log('Terminate API response:', apiResponse);
 
-      if (user && localSessionData) {
-        const endTime = new Date().toISOString();
-        const conversation = localSessionData.conversation || [];
-    
-        const completedSession = {
-          id: sessionId,
-          sessionId: sessionId,
-          scenarioType: localSessionData.scenario_type,
-          selectedSubtype: localSessionData.selected_subtype,
-          startTime: localSessionData.start_time,
-          endTime: endTime,
-          conversation: conversation,
-          scenarioProgress: localSessionData.scenario_progress || 0,
-          emotionalState: localSessionData.emotional_state || 'unknown',
-          keyDetailsRevealed: localSessionData.key_details_revealed || [],
-          status: 'completed'
-        };
-
-        console.log('💾 SAVING COMPLETED SESSION:');
-        console.log('- Session ID:', sessionId);
-        console.log('- Start time:', completedSession.startTime);
-        console.log('- End time:', completedSession.endTime);
-        console.log('- Duration (ms):', new Date(endTime) - new Date(completedSession.startTime));
-        console.log('- Conversation array:', conversation);
-        console.log('- Message count:', conversation.length);
-        console.log('- Complete session data:', completedSession);
-
-        saveSessionToAuth(completedSession);
-
+      if (user) {
         const userSessions = JSON.parse(localStorage.getItem(`user_${user.id}_sessions`) || '[]');
         const updatedSessions = userSessions.filter(session => session.session_id !== sessionId);
         localStorage.setItem(`user_${user.id}_sessions`, JSON.stringify(updatedSessions));
         
-        console.log('Session saved to history and removed from active sessions');
-      } else {
-        console.warn('No local session data found or no user logged in');
+        console.log('Session terminated and removed from active sessions');
       }
       
       return apiResponse;
@@ -223,14 +185,14 @@ export const useSession = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, saveSessionToAuth]);
+  }, [user]); 
 
   const getSession = useCallback(async (sessionId) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('📋 Getting session:', sessionId);
+      console.log('Getting session:', sessionId);
       const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -250,13 +212,13 @@ export const useSession = () => {
   const getUserSessionHistory = useCallback(async () => {
     if (!user) return [];
     
-    console.log('📚 Getting user session history');
+    console.log('Getting user session history');
     
     const localHistory = JSON.parse(localStorage.getItem(`user_${user.id}_history`) || '[]');
     console.log('Local history sessions:', localHistory.length);
     
     localHistory.forEach((session, index) => {
-      console.log(`📋 Session ${index + 1}:`, {
+      console.log(`Session ${index + 1}:`, {
         id: session.sessionId,
         scenario: session.scenarioType,
         messageCount: session.conversation?.length || 0,
