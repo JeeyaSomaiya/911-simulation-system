@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from './authContext';
 
-const API_BASE_URL = 'http://130.250.171.225:5000';
+const API_BASE_URL = 'http://127.0.0.1:5000';
 
 export const useSession = () => {
   const [isLoading, setIsLoading] = useState(false);

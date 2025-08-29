@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class HuggingFaceCallerGenerator:
     def __init__(self):
-        self.model_path = "/home/ubuntu/.llama/checkpoints/Llama3.1-8B-Instruct-hf"
+        self.model_path = "/opt/models/Llama3.1-8B-Instruct-hf"
         self.tokenizer = None
         self.model = None
         self.pipeline = None
